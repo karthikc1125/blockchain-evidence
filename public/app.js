@@ -1,10 +1,16 @@
-// Clean Evidence Management System - No Dependencies
+// Clean Evidence Management System - Enhanced with Admin Management
 let userAccount;
 
 const roleNames = {
     1: 'Public Viewer', 2: 'Investigator', 3: 'Forensic Analyst',
     4: 'Legal Professional', 5: 'Court Official', 6: 'Evidence Manager',
     7: 'Auditor', 8: 'Administrator'
+};
+
+const roleMapping = {
+    1: 'public_viewer', 2: 'investigator', 3: 'forensic_analyst',
+    4: 'legal_professional', 5: 'court_official', 6: 'evidence_manager',
+    7: 'auditor', 8: 'admin'
 };
 
 // Initialize app
@@ -83,28 +89,38 @@ async function checkRegistrationStatus() {
             return;
         }
         
-        // Check localStorage first (fastest)
+        // Check database for user
         let userInfo = null;
-        const savedUser = localStorage.getItem('evidUser_' + userAccount);
-        if (savedUser) {
-            userInfo = JSON.parse(savedUser);
-        }
-        
-        // Try database if available
-        if (!userInfo && typeof storage !== 'undefined') {
+        if (typeof storage !== 'undefined') {
             try {
                 userInfo = await storage.getUser(userAccount);
             } catch (error) {
-                console.log('Database not available, using localStorage only');
+                console.log('Database not available, checking localStorage');
+            }
+        }
+        
+        // Fallback to localStorage
+        if (!userInfo) {
+            const savedUser = localStorage.getItem('evidUser_' + userAccount);
+            if (savedUser) {
+                userInfo = JSON.parse(savedUser);
             }
         }
         
         if (userInfo) {
+            // Check if user is admin
+            if (userInfo.role === 'admin' || userInfo.role === 8) {
+                localStorage.setItem('currentUser', userAccount);
+                window.location.href = 'admin.html';
+                return;
+            }
+            
             updateUserUI(userInfo);
             toggleSections('alreadyRegistered');
             return;
         }
         
+        // New wallet - show registration
         toggleSections('registration');
     } catch (error) {
         console.error('Registration check error:', error);
@@ -159,6 +175,16 @@ async function handleRegistration(event) {
             return;
         }
         
+        // Prevent admin role self-registration
+        if (formData.role === 8 || formData.role === 'admin') {
+            showAlert('Administrator role cannot be self-registered. Contact an existing administrator.', 'error');
+            showLoading(false);
+            return;
+        }
+        
+        // Convert role number to string for database
+        const dbRole = roleMapping[formData.role];
+        
         // Save to localStorage (always works)
         localStorage.setItem('evidUser_' + userAccount, JSON.stringify(formData));
         localStorage.setItem('currentUser', userAccount);
@@ -166,8 +192,17 @@ async function handleRegistration(event) {
         // Try to save to database if available
         if (typeof storage !== 'undefined') {
             try {
-                formData.walletAddress = userAccount;
-                await storage.saveUser(formData);
+                const userData = {
+                    walletAddress: userAccount,
+                    fullName: formData.fullName,
+                    role: dbRole,
+                    department: formData.department,
+                    jurisdiction: formData.jurisdiction,
+                    badgeNumber: formData.badgeNumber,
+                    accountType: 'real',
+                    createdBy: 'self'
+                };
+                await storage.saveUser(userData);
                 console.log('User saved to database');
             } catch (error) {
                 console.log('Database save failed, using localStorage only');

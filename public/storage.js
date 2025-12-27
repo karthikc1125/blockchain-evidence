@@ -1,4 +1,4 @@
-// Minimal Storage & Evidence Manager
+// Enhanced Storage with Admin Management & Test Accounts
 class Storage {
     constructor() {
         this.apiUrl = `${config.SUPABASE_URL}/rest/v1`;
@@ -20,9 +20,10 @@ class Storage {
                     full_name: userData.fullName,
                     role: userData.role,
                     department: userData.department || 'Public',
-                    badge_number: userData.badgeNumber || '',
                     jurisdiction: userData.jurisdiction || 'Public',
-                    registration_date: new Date().toISOString(),
+                    badge_number: userData.badgeNumber || '',
+                    account_type: userData.accountType || 'real',
+                    created_by: userData.createdBy || 'self',
                     is_active: true
                 })
             });
@@ -42,7 +43,7 @@ class Storage {
 
     async getUser(walletAddress) {
         try {
-            const response = await fetch(`${this.apiUrl}/users?wallet_address=eq.${walletAddress}`, {
+            const response = await fetch(`${this.apiUrl}/users?wallet_address=eq.${walletAddress}&is_active=eq.true`, {
                 headers: this.headers
             });
             
@@ -54,7 +55,7 @@ class Storage {
                 }
             }
             
-            console.log('User not found in database, checking localStorage');
+            console.log('User not found in database');
             return null;
         } catch (error) {
             console.error('Database connection error:', error);
@@ -62,7 +63,185 @@ class Storage {
         }
     }
 
-    // Evidence Management
+    // Admin Functions
+    async getAllUsers() {
+        try {
+            const response = await fetch(`${this.apiUrl}/users?order=created_at.desc`, {
+                headers: this.headers
+            });
+            return response.ok ? await response.json() : [];
+        } catch (error) {
+            console.error('Error getting all users:', error);
+            return [];
+        }
+    }
+
+    async createAdminUser(adminWallet, newAdminData) {
+        try {
+            // Check if admin limit reached
+            const admins = await this.getAdminCount();
+            if (admins >= 10) {
+                throw new Error('Maximum admin limit (10) reached');
+            }
+
+            const response = await fetch(`${this.apiUrl}/users`, {
+                method: 'POST',
+                headers: this.headers,
+                body: JSON.stringify({
+                    wallet_address: newAdminData.walletAddress,
+                    full_name: newAdminData.fullName,
+                    role: 'admin',
+                    department: 'Administration',
+                    jurisdiction: 'System',
+                    account_type: 'real',
+                    created_by: adminWallet,
+                    is_active: true
+                })
+            });
+
+            if (response.ok) {
+                await this.logAdminAction(adminWallet, 'create_admin', newAdminData.walletAddress, {
+                    admin_name: newAdminData.fullName
+                });
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error('Error creating admin:', error);
+            throw error;
+        }
+    }
+
+    async deleteUser(adminWallet, targetWallet) {
+        try {
+            if (adminWallet === targetWallet) {
+                throw new Error('Administrators cannot delete their own account');
+            }
+
+            const response = await fetch(`${this.apiUrl}/users?wallet_address=eq.${targetWallet}`, {
+                method: 'PATCH',
+                headers: this.headers,
+                body: JSON.stringify({ is_active: false })
+            });
+
+            if (response.ok) {
+                await this.logAdminAction(adminWallet, 'delete_user', targetWallet, {
+                    action: 'soft_delete'
+                });
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error('Error deleting user:', error);
+            throw error;
+        }
+    }
+
+    async getAdminCount() {
+        try {
+            const response = await fetch(`${this.apiUrl}/users?role=eq.admin&is_active=eq.true&select=id`, {
+                headers: this.headers
+            });
+            if (response.ok) {
+                const admins = await response.json();
+                return admins.length;
+            }
+            return 0;
+        } catch (error) {
+            console.error('Error getting admin count:', error);
+            return 0;
+        }
+    }
+
+    // Test Account Functions
+    async createTestAccount(adminWallet, testData) {
+        try {
+            const testWallet = this.generateTestWallet();
+            
+            const response = await fetch(`${this.apiUrl}/users`, {
+                method: 'POST',
+                headers: this.headers,
+                body: JSON.stringify({
+                    wallet_address: testWallet,
+                    full_name: testData.accountName,
+                    role: testData.role,
+                    department: 'Test Department',
+                    jurisdiction: 'Test',
+                    account_type: 'test',
+                    created_by: adminWallet,
+                    is_active: true
+                })
+            });
+
+            if (response.ok) {
+                await this.logAdminAction(adminWallet, 'create_test_account', testWallet, {
+                    account_name: testData.accountName,
+                    role: testData.role
+                });
+                return { success: true, testWallet, accountName: testData.accountName, role: testData.role };
+            }
+            return { success: false };
+        } catch (error) {
+            console.error('Error creating test account:', error);
+            throw error;
+        }
+    }
+
+    async getTestAccounts(adminWallet) {
+        try {
+            const response = await fetch(`${this.apiUrl}/users?account_type=eq.test&created_by=eq.${adminWallet}&is_active=eq.true&order=created_at.desc`, {
+                headers: this.headers
+            });
+            return response.ok ? await response.json() : [];
+        } catch (error) {
+            console.error('Error getting test accounts:', error);
+            return [];
+        }
+    }
+
+    async deleteTestAccount(adminWallet, testWallet) {
+        try {
+            const response = await fetch(`${this.apiUrl}/users?wallet_address=eq.${testWallet}&account_type=eq.test`, {
+                method: 'DELETE',
+                headers: this.headers
+            });
+
+            if (response.ok) {
+                await this.logAdminAction(adminWallet, 'delete_test_account', testWallet, {});
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error('Error deleting test account:', error);
+            throw error;
+        }
+    }
+
+    generateTestWallet() {
+        const timestamp = Date.now().toString(36);
+        const random = Math.random().toString(36).substring(2, 8);
+        return `0xtest${timestamp}${random}`.toLowerCase();
+    }
+
+    // Admin Action Logging
+    async logAdminAction(adminWallet, actionType, targetWallet, details) {
+        try {
+            await fetch(`${this.apiUrl}/admin_actions`, {
+                method: 'POST',
+                headers: this.headers,
+                body: JSON.stringify({
+                    admin_wallet: adminWallet,
+                    action_type: actionType,
+                    target_wallet: targetWallet,
+                    details: details
+                })
+            });
+        } catch (error) {
+            console.error('Error logging admin action:', error);
+        }
+    }
+
+    // Evidence Management (existing functions)
     async saveEvidence(evidenceData) {
         try {
             const response = await fetch(`${this.apiUrl}/evidence`, {
@@ -118,25 +297,6 @@ class Storage {
         } catch (error) {
             console.error('Get evidence error:', error);
             return null;
-        }
-    }
-
-    // Activity Logging
-    async logActivity(userId, action, details) {
-        try {
-            await fetch(`${this.apiUrl}/activity_logs`, {
-                method: 'POST',
-                headers: this.headers,
-                body: JSON.stringify({
-                    user_id: userId,
-                    action: action,
-                    details: details,
-                    timestamp: new Date().toISOString(),
-                    ip_address: 'unknown'
-                })
-            });
-        } catch (error) {
-            console.error('Log activity error:', error);
         }
     }
 
