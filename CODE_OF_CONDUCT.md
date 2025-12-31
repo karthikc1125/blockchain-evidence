@@ -45,7 +45,7 @@ This Code of Conduct applies within all community spaces, and also applies when 
 
 ## Reporting
 
-Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the community leaders responsible for enforcement at **conduct@evid-dgc.org**. All complaints will be reviewed and investigated promptly and fairly.
+Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the community leaders responsible for enforcement at **DGC2MHNE@proton.me**. All complaints will be reviewed and investigated promptly and fairly.
 
 All community leaders are obligated to respect the privacy and security of the reporter of any incident.
 
@@ -83,7 +83,7 @@ Community leaders will follow these Community Impact Guidelines in determining t
 
 * **No Real Data**: Never share, discuss, or reference actual case data or evidence in public forums
 * **Mock Data Only**: Use only anonymized or mock data for examples and demonstrations
-* **Vulnerability Reporting**: Report security vulnerabilities through proper channels (security@evid-dgc.org)
+* **Vulnerability Reporting**: Report security vulnerabilities through proper channels (DGC2MHNE@proton.me)
 * **User Privacy**: Maintain strict confidentiality regarding system access and user information
 * **Compliance**: Ensure all contributions comply with relevant data protection regulations
 
@@ -120,8 +120,8 @@ For answers to common questions about this code of conduct, see the FAQ at [http
 ---
 
 **Contact Information:**
-- **General Conduct Issues**: conduct@evid-dgc.org
-- **Security Concerns**: security@evid-dgc.org
-- **Project Maintainers**: maintainers@evid-dgc.org
+- **General Conduct Issues**: DGC2MHNE@proton.me
+- **Security Concerns**:DGC2MHNE@proton.me
+- **Project Maintainers**: DGC2MHNE@proton.me
 
 *This Code of Conduct is designed to ensure EVID-DGC maintains the highest standards of professionalism required for evidence management systems used in legal and law enforcement contexts.*
