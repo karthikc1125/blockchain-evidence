@@ -26,7 +26,7 @@ async function initializeApp() {
     const connectBtn = document.getElementById('connectWallet');
     const regForm = document.getElementById('registrationForm');
     const dashBtn = document.getElementById('goToDashboard');
-    
+
     if (connectBtn) connectBtn.addEventListener('click', connectWallet);
     if (regForm) regForm.addEventListener('submit', handleRegistration);
     if (dashBtn) dashBtn.addEventListener('click', goToDashboard);
@@ -61,7 +61,7 @@ function initializeHamburgerMenu() {
         menuToggle.addEventListener('click', () => {
             navMenu.classList.toggle('active');
         });
-        
+
         // Close menu when link is clicked
         const navLinks = navMenu.querySelectorAll('.nav-link');
         navLinks.forEach(link => {
@@ -71,7 +71,6 @@ function initializeHamburgerMenu() {
         });
     }
 }
-
 /**
  * Connects to the user's Ethereum wallet (MetaMask) or uses a demo address when MetaMask is unavailable, then updates application state and UI.
  *
@@ -79,44 +78,73 @@ function initializeHamburgerMenu() {
  */
 async function connectWallet() {
     try {
+        // Show loader
+        const loader = document.getElementById('loader');
+        const loaderMessage = document.getElementById('loaderMessage');
+        if (loader) loader.classList.remove('hidden');
+        if (loaderMessage) loaderMessage.classList.remove('hidden');
+
         showLoading(true);
-        
+
         // Track wallet connection attempt (safe check)
         if (typeof trackUserAction === 'function') {
             trackUserAction('wallet_connect_attempt', 'authentication');
         }
-        
+
         // Demo mode for testing without MetaMask
         if (!window.ethereum) {
             userAccount = '0x1234567890123456789012345678901234567890';
+
+            // Artificial delay to show loader in demo mode
+            await new Promise(resolve => setTimeout(resolve, 1500));
+
             updateWalletUI();
             await checkRegistrationStatus();
             showLoading(false);
+
+            // Hide loader
+            if (loader) loader.classList.add('hidden');
+            if (loaderMessage) loaderMessage.classList.add('hidden');
             return;
         }
-        
+
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
         if (accounts.length === 0) {
             showAlert('No accounts found. Please unlock MetaMask.', 'error');
             showLoading(false);
+
+            // Hide loader
+            if (loader) loader.classList.add('hidden');
+            if (loaderMessage) loaderMessage.classList.add('hidden');
             return;
         }
-        
+
         userAccount = accounts[0];
         updateWalletUI();
         await checkRegistrationStatus();
-        
+
         // Track successful wallet connection (safe check)
         if (typeof trackUserAction === 'function') {
             trackUserAction('wallet_connected', 'authentication');
         }
-        
+
         showLoading(false);
+
+        // Hide loader
+        if (loader) loader.classList.add('hidden');
+        if (loaderMessage) loaderMessage.classList.add('hidden');
     } catch (error) {
         showLoading(false);
+
+        // Hide loader
+        const loader = document.getElementById('loader');
+        const loaderMessage = document.getElementById('loaderMessage');
+        if (loader) loader.classList.add('hidden');
+        if (loaderMessage) loaderMessage.classList.add('hidden');
+
         console.error('Wallet connection error:', error);
         showAlert('Failed to connect wallet: ' + error.message, 'error');
-        
+
         // Track wallet connection failure (safe check)
         if (typeof trackUserAction === 'function') {
             trackUserAction('wallet_connect_failed', 'authentication');
@@ -128,7 +156,7 @@ function updateWalletUI() {
     const walletAddr = document.getElementById('walletAddress');
     const walletStatus = document.getElementById('walletStatus');
     const connectBtn = document.getElementById('connectWallet');
-    
+
     if (walletAddr) walletAddr.textContent = userAccount;
     if (walletStatus) walletStatus.classList.remove('hidden');
     if (connectBtn) {
@@ -154,7 +182,7 @@ async function checkRegistrationStatus() {
             showAlert('Please connect your wallet first.', 'error');
             return;
         }
-        
+
         // Check database for user first (primary source) - safe check
         let userInfo = null;
         if (typeof window.storage !== 'undefined' && window.storage) {
@@ -164,7 +192,7 @@ async function checkRegistrationStatus() {
                 console.log('Database not available, checking localStorage');
             }
         }
-        
+
         // If user found in database
         if (userInfo) {
             // Check if user is inactive
@@ -173,40 +201,40 @@ async function checkRegistrationStatus() {
                 logout();
                 return;
             }
-            
+
             // Check if user is admin - show options instead of auto-redirect
             if (userInfo.role === 'admin') {
                 updateAdminUI(userInfo);
                 toggleSections('alreadyRegistered');
                 return;
             }
-            
+
             // Regular user - show dashboard access
             updateUserUI(userInfo);
             toggleSections('alreadyRegistered');
             return;
         }
-        
+
         // Fallback to localStorage for existing users (backward compatibility)
         const savedUser = localStorage.getItem('evidUser_' + userAccount);
         if (savedUser) {
             const localUserInfo = JSON.parse(savedUser);
-            
+
             // Check if it's an admin in localStorage - show options instead of auto-redirect
             if (localUserInfo.role === 8 || localUserInfo.role === 'admin') {
                 updateAdminUI(localUserInfo);
                 toggleSections('alreadyRegistered');
                 return;
             }
-            
+
             updateUserUI(localUserInfo);
             toggleSections('alreadyRegistered');
             return;
         }
-        
+
         // New wallet - show registration form
         toggleSections('registration');
-        
+
     } catch (error) {
         console.error('Registration check error:', error);
         showAlert('Error checking registration. Please try again.', 'error');
@@ -219,7 +247,7 @@ function updateUserUI(userInfo) {
     const userName = document.getElementById('userName');
     const userRoleName = document.getElementById('userRoleName');
     const userDepartment = document.getElementById('userDepartment');
-    
+
     if (userName) userName.textContent = userInfo.fullName || userInfo.full_name;
     if (userRoleName) {
         const role = userInfo.role;
@@ -234,14 +262,14 @@ function updateAdminUI(userInfo) {
     const userRoleName = document.getElementById('userRoleName');
     const userDepartment = document.getElementById('userDepartment');
     const dashBtn = document.getElementById('goToDashboard');
-    
+
     if (userName) userName.textContent = userInfo.fullName || userInfo.full_name;
     if (userRoleName) {
         userRoleName.textContent = '👑 Administrator';
         userRoleName.className = 'badge badge-admin';
     }
     if (userDepartment) userDepartment.textContent = 'System Administration';
-    
+
     // Change dashboard button to admin dashboard
     if (dashBtn) {
         dashBtn.textContent = '👑 Go to Admin Dashboard';
@@ -255,7 +283,7 @@ function toggleSections(activeSection) {
         registration: document.getElementById('registrationSection'),
         alreadyRegistered: document.getElementById('alreadyRegisteredSection')
     };
-    
+
     Object.keys(sections).forEach(key => {
         if (sections[key]) {
             sections[key].classList.toggle('hidden', key !== activeSection);
@@ -271,36 +299,36 @@ function toggleSections(activeSection) {
  */
 async function handleRegistration(event) {
     event.preventDefault();
-    
+
     try {
         showLoading(true);
-        
+
         if (!userAccount) {
             showAlert('Please connect your wallet first.', 'error');
             showLoading(false);
             return;
         }
-        
+
         const formData = getFormData();
         if (!formData) {
             showLoading(false);
             return;
         }
-        
+
         // Prevent admin role self-registration
         if (formData.role === 8 || formData.role === 'admin') {
             showAlert('Administrator role cannot be self-registered. Contact an existing administrator.', 'error');
             showLoading(false);
             return;
         }
-        
+
         // Convert role number to string for database
         const dbRole = roleMapping[formData.role];
-        
+
         // Save to localStorage (always works)
         localStorage.setItem('evidUser_' + userAccount, JSON.stringify(formData));
         localStorage.setItem('currentUser', userAccount);
-        
+
         // Try to save to database if available - safe check
         if (typeof window.storage !== 'undefined' && window.storage) {
             try {
@@ -320,7 +348,7 @@ async function handleRegistration(event) {
                 console.log('Database save failed, using localStorage only');
             }
         }
-        
+
         // Track successful registration (safe check)
         if (typeof trackEvent === 'function') {
             trackEvent('user_registration', {
@@ -330,14 +358,14 @@ async function handleRegistration(event) {
                 department: formData.department
             });
         }
-        
+
         showLoading(false);
         showAlert('Registration successful! Redirecting to dashboard...', 'success');
-        
+
         setTimeout(() => {
             window.location.href = 'dashboard.html';
         }, 2000);
-        
+
     } catch (error) {
         showLoading(false);
         console.error('Registration error:', error);
@@ -348,12 +376,12 @@ async function handleRegistration(event) {
 function getFormData() {
     const fullName = document.getElementById('fullName')?.value;
     const role = parseInt(document.getElementById('userRole')?.value);
-    
+
     if (!fullName || !role) {
         showAlert('Please fill in all required fields and select a role.', 'error');
         return null;
     }
-    
+
     return {
         fullName,
         role,
@@ -440,7 +468,7 @@ function getRoleClass(role) {
 function logout() {
     // Clear all stored data
     localStorage.clear();
-    
+
     // Reset UI
     userAccount = null;
     const connectBtn = document.getElementById('connectWallet');
@@ -448,11 +476,11 @@ function logout() {
         connectBtn.textContent = '🚀 Connect MetaMask Wallet';
         connectBtn.disabled = false;
     }
-    
+
     // Hide all sections except wallet
     toggleSections('wallet');
     document.getElementById('walletStatus')?.classList.add('hidden');
-    
+
     // Force page reload to ensure clean state
     window.location.replace('index.html');
 }
@@ -468,20 +496,20 @@ function disconnectWallet() {
     // Clear wallet connection
     userAccount = null;
     localStorage.clear();
-    
+
     // Reset connect button
     const connectBtn = document.getElementById('connectWallet');
     if (connectBtn) {
         connectBtn.textContent = '🚀 Connect MetaMask Wallet';
         connectBtn.disabled = false;
     }
-    
+
     // Hide wallet status and show connect section
     document.getElementById('walletStatus')?.classList.add('hidden');
     document.getElementById('registrationSection')?.classList.add('hidden');
     document.getElementById('alreadyRegisteredSection')?.classList.add('hidden');
     document.getElementById('walletSection')?.classList.remove('hidden');
-    
+
     showAlert('Wallet disconnected. You can now connect a different account.', 'success');
 }
 
@@ -493,7 +521,7 @@ function showLoading(show) {
 function showAlert(message, type) {
     // Remove existing alerts
     document.querySelectorAll('.alert').forEach(alert => alert.remove());
-    
+
     const alert = document.createElement('div');
     alert.className = `alert alert-${type}`;
     alert.innerHTML = message;
@@ -509,29 +537,29 @@ function showAlert(message, type) {
         max-width: 400px;
         background: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#17a2b8'};
     `;
-    
+
     document.body.appendChild(alert);
     setTimeout(() => alert.remove(), 5000);
 }
 
 // Role selection functionality
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const roleCards = document.querySelectorAll('.role-card');
     const userRoleInput = document.getElementById('userRole');
     const professionalFields = document.getElementById('professionalFields');
-    
+
     roleCards.forEach(card => {
-        card.addEventListener('click', function() {
+        card.addEventListener('click', function () {
             // Remove selected class from all cards
             roleCards.forEach(c => c.classList.remove('selected'));
-            
+
             // Add selected class to clicked card
             this.classList.add('selected');
-            
+
             // Set the role value
             const role = this.dataset.role;
             if (userRoleInput) userRoleInput.value = role;
-            
+
             // Track role selection (safe check)
             if (typeof trackUserAction === 'function') {
                 trackUserAction('role_selected', 'registration');
@@ -543,7 +571,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     role_id: role
                 });
             }
-            
+
             // Show/hide professional fields
             if (professionalFields) {
                 if (role === '1') { // Public Viewer

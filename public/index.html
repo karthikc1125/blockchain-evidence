@@ -1,26 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Evid-DGC | Secure Blockchain Evidence Management System</title>
-    
+
     <!-- SEO Meta Tags -->
     <title>EVID-DGC | Secure Blockchain Evidence Management System</title>
-    <meta name="description" content="EVID-DGC: Blockchain evidence management for law enforcement, forensic analysts, and legal professionals. Ensures evidence integrity with immutable records.">
-    <meta name="keywords" content="blockchain, evidence management, law enforcement, forensic analysis, chain of custody, digital evidence, secure records">
+    <meta name="description"
+        content="EVID-DGC: Blockchain evidence management for law enforcement, forensic analysts, and legal professionals. Ensures evidence integrity with immutable records.">
+    <meta name="keywords"
+        content="blockchain, evidence management, law enforcement, forensic analysis, chain of custody, digital evidence, secure records">
     <meta name="author" content="EVID-DGC Team">
-    
+
     <link rel="stylesheet" href="styles.css?v=7">
-    <link rel="icon" href="/favicon.ico" type="image/x-icon"> 
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
 
     <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-KEYDE0ZH4Z"></script>
     <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-KEYDE0ZH4Z');
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'G-KEYDE0ZH4Z');
     </script>
     <script src="https://cdn.jsdelivr.net/npm/web3@1.8.0/dist/web3.min.js"></script>
     <script src="config.js?v=7"></script>
@@ -28,22 +31,24 @@
     <script src="analytics.js"></script>
     <script src="app.js?v=7"></script>
 </head>
+
 <body>
     <header class="header-nav">
         <div class="navbar-container">
             <h1 class="logo">🔐 EVID-DGC</h1>
-            
+
             <!-- Hamburger button (shows only on mobile) -->
             <button class="menu-toggle" id="menuToggle">
                 <span></span>
                 <span></span>
                 <span></span>
             </button>
-            
+
             <!-- Navigation menu -->
             <nav class="nav-menu" id="navMenu">
                 <a href="#home" class="nav-link">🏠 Home</a>
-                <a href="https://github.com/Gooichand/blockchain-evidence" target="_blank" class="nav-link">🐧 GitHub</a>
+                <a href="https://github.com/Gooichand/blockchain-evidence" target="_blank" class="nav-link">🐧
+                    GitHub</a>
                 <a href="#docs" class="nav-link">📚 Documentation</a>
                 <a href="#faq" class="nav-link">❓ FAQ</a>
             </nav>
@@ -68,6 +73,8 @@
                 <button id="connectWallet" class="btn btn-primary pulse">
                     🚀 Connect MetaMask Wallet
                 </button>
+                <div id="loader" class="loader hidden"></div>
+                <div id="loaderMessage" class="loader-message hidden">Connecting to MetaMask...</div>
             </div>
         </div>
 
@@ -88,7 +95,7 @@
                 <h2>👤 User Registration</h2>
                 <p>Select your role and register (Administrator accounts are created by existing admins only)</p>
             </div>
-            
+
             <div class="role-selection">
                 <h3>🎯 Select Your Role</h3>
                 <div class="role-grid">
@@ -235,9 +242,10 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             createParticles();
         });
     </script>
 </body>
+
 </html>
