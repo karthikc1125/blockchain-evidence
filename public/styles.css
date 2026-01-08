@@ -1505,3 +1505,50 @@ body {
     width: 24px;
     height: 24px;
 }
+
+/* Error Modal Styles */
+.error-content {
+    text-align: center;
+    max-width: 450px !important;
+    padding: 2.5rem !important;
+}
+
+.error-icon-wrapper {
+    margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: center;
+}
+
+.error-icon {
+    font-size: 4rem;
+    animation: bounce 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.error-message {
+    color: #64748b;
+    margin-bottom: 2rem;
+    line-height: 1.6;
+    font-size: 1.05rem;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+@keyframes bounce {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+
+    50% {
+        transform: scale(1.2);
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
