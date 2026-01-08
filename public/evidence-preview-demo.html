@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evidence Preview System Demo | EVID-DGC</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="evidence-preview-styles.css">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+</head>
+<body>
+    <header class="header-nav">
+        <div class="navbar-container">
+            <div class="nav-brand">
+                <i data-lucide="shield-check" class="brand-icon"></i>
+                <span>EVID-DGC</span>
+            </div>
+            <nav class="nav-menu">
+                <a href="index.html" class="nav-link">
+                    <i data-lucide="arrow-left"></i>
+                    <span>Back to Home</span>
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon">
+                    <i data-lucide="eye"></i>
+                </div>
+                <h1>Evidence Preview System</h1>
+                <p>Advanced multi-format evidence viewer with comprehensive analysis tools</p>
+            </div>
+            <div class="card-body">
+                <div class="preview-demo-grid">
+                    <!-- PDF Evidence -->
+                    <div class="evidence-demo-item" data-type="pdf">
+                        <div class="evidence-icon">📄</div>
+                        <div class="evidence-info">
+                            <h3>Legal Document.pdf</h3>
+                            <p>Case: CASE-2024-001</p>
+                            <p>Size: 2.4 MB</p>
+                            <p>Type: PDF Document</p>
+                        </div>
+                        <button class="preview-demo-btn" onclick="openDemoPreview('pdf')">
+                            <i data-lucide="eye"></i>
+                            Preview
+                        </button>
+                    </div>
+
+                    <!-- Image Evidence -->
+                    <div class="evidence-demo-item" data-type="image">
+                        <div class="evidence-icon">🖼️</div>
+                        <div class="evidence-info">
+                            <h3>Crime Scene Photo.jpg</h3>
+                            <p>Case: CASE-2024-002</p>
+                            <p>Size: 8.7 MB</p>
+                            <p>Type: JPEG Image</p>
+                        </div>
+                        <button class="preview-demo-btn" onclick="openDemoPreview('image')">
+                            <i data-lucide="eye"></i>
+                            Preview
+                        </button>
+                    </div>
+
+                    <!-- Video Evidence -->
+                    <div class="evidence-demo-item" data-type="video">
+                        <div class="evidence-icon">🎥</div>
+                        <div class="evidence-info">
+                            <h3>Security Footage.mp4</h3>
+                            <p>Case: CASE-2024-003</p>
+                            <p>Size: 156 MB</p>
+                            <p>Type: MP4 Video</p>
+                        </div>
+                        <button class="preview-demo-btn" onclick="openDemoPreview('video')">
+                            <i data-lucide="eye"></i>
+                            Preview
+                        </button>
+                    </div>
+
+                    <!-- Audio Evidence -->
+                    <div class="evidence-demo-item" data-type="audio">
+                        <div class="evidence-icon">🎵</div>
+                        <div class="evidence-info">
+                            <h3>Phone Recording.mp3</h3>
+                            <p>Case: CASE-2024-004</p>
+                            <p>Size: 12.3 MB</p>
+                            <p>Type: MP3 Audio</p>
+                        </div>
+                        <button class="preview-demo-btn" onclick="openDemoPreview('audio')">
+                            <i data-lucide="eye"></i>
+                            Preview
+                        </button>
+                    </div>
+
+                    <!-- Document Evidence -->
+                    <div class="evidence-demo-item" data-type="document">
+                        <div class="evidence-icon">📝</div>
+                        <div class="evidence-info">
+                            <h3>Witness Statement.docx</h3>
+                            <p>Case: CASE-2024-005</p>
+                            <p>Size: 1.2 MB</p>
+                            <p>Type: Word Document</p>
+                        </div>
+                        <button class="preview-demo-btn" onclick="openDemoPreview('document')">
+                            <i data-lucide="eye"></i>
+                            Preview
+                        </button>
+                    </div>
+
+                    <!-- Archive Evidence -->
+                    <div class="evidence-demo-item" data-type="archive">
+                        <div class="evidence-icon">📦</div>
+                        <div class="evidence-info">
+                            <h3>Digital Evidence.zip</h3>
+                            <p>Case: CASE-2024-006</p>
+                            <p>Size: 45.8 MB</p>
+                            <p>Type: ZIP Archive</p>
+                        </div>
+                        <button class="preview-demo-btn" onclick="openDemoPreview('archive')">
+                            <i data-lucide="eye"></i>
+                            Preview
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features Showcase -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon">
+                    <i data-lucide="features"></i>
+                </div>
+                <h2>Preview System Features</h2>
+                <p>Comprehensive evidence viewing capabilities</p>
+            </div>
+            <div class="card-body">
+                <div class="features-showcase-grid">
+                    <div class="feature-showcase-item">
+                        <div class="feature-icon">📄</div>
+                        <h3>PDF Viewer</h3>
+                        <ul>
+                            <li>Page navigation with thumbnails</li>
+                            <li>Zoom and pan controls</li>
+                            <li>Text search functionality</li>
+                            <li>Annotation support</li>
+                            <li>Print and export options</li>
+                        </ul>
+                    </div>
+
+                    <div class="feature-showcase-item">
+                        <div class="feature-icon">🖼️</div>
+                        <h3>Image Viewer</h3>
+                        <ul>
+                            <li>High-resolution zoom (up to 1000%)</li>
+                            <li>Pan and rotate functionality</li>
+                            <li>Measurement tools</li>
+                            <li>Color analysis</li>
+                            <li>Annotation and markup</li>
+                        </ul>
+                    </div>
+
+                    <div class="feature-showcase-item">
+                        <div class="feature-icon">🎥</div>
+                        <h3>Video Player</h3>
+                        <ul>
+                            <li>Frame-by-frame analysis</li>
+                            <li>Variable playback speed</li>
+                            <li>Timestamp navigation</li>
+                            <li>Screenshot capture</li>
+                            <li>Video metadata display</li>
+                        </ul>
+                    </div>
+
+                    <div class="feature-showcase-item">
+                        <div class="feature-icon">🎵</div>
+                        <h3>Audio Player</h3>
+                        <ul>
+                            <li>Waveform visualization</li>
+                            <li>Frequency analysis</li>
+                            <li>Playback controls</li>
+                            <li>Audio enhancement</li>
+                            <li>Segment extraction</li>
+                        </ul>
+                    </div>
+
+                    <div class="feature-showcase-item">
+                        <div class="feature-icon">🔒</div>
+                        <h3>Security Features</h3>
+                        <ul>
+                            <li>Watermark overlay</li>
+                            <li>Access logging</li>
+                            <li>Role-based permissions</li>
+                            <li>Integrity verification</li>
+                            <li>Chain of custody tracking</li>
+                        </ul>
+                    </div>
+
+                    <div class="feature-showcase-item">
+                        <div class="feature-icon">📱</div>
+                        <h3>User Experience</h3>
+                        <ul>
+                            <li>Mobile responsive design</li>
+                            <li>Keyboard shortcuts</li>
+                            <li>Fullscreen mode</li>
+                            <li>Accessibility support</li>
+                            <li>Multi-format support</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Keyboard Shortcuts -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon">
+                    <i data-lucide="keyboard"></i>
+                </div>
+                <h2>Keyboard Shortcuts</h2>
+                <p>Efficient navigation and control</p>
+            </div>
+            <div class="card-body">
+                <div class="shortcuts-grid">
+                    <div class="shortcut-category">
+                        <h3>General Controls</h3>
+                        <div class="shortcut-list">
+                            <div class="shortcut-item">
+                                <kbd>Esc</kbd>
+                                <span>Close preview</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <kbd>Ctrl</kbd> + <kbd>F</kbd>
+                                <span>Toggle fullscreen</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <kbd>Ctrl</kbd> + <kbd>W</kbd>
+                                <span>Toggle watermark</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <kbd>Ctrl</kbd> + <kbd>D</kbd>
+                                <span>Download evidence</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="shortcut-category">
+                        <h3>Navigation</h3>
+                        <div class="shortcut-list">
+                            <div class="shortcut-item">
+                                <kbd>←</kbd> <kbd>→</kbd>
+                                <span>Previous/Next page (PDF)</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <kbd>+</kbd> <kbd>-</kbd>
+                                <span>Zoom in/out</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <kbd>R</kbd>
+                                <span>Rotate view</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <kbd>0</kbd>
+                                <span>Reset view</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="shortcut-category">
+                        <h3>Media Controls</h3>
+                        <div class="shortcut-list">
+                            <div class="shortcut-item">
+                                <kbd>Space</kbd>
+                                <span>Play/Pause</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <kbd>J</kbd> <kbd>L</kbd>
+                                <span>Skip backward/forward</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <kbd>M</kbd>
+                                <span>Mute/Unmute</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <kbd>F</kbd>
+                                <span>Frame by frame</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Include the preview system -->
+    <script src="evidence-viewers.js"></script>
+    <script src="evidence-preview-system.js"></script>
+    
+    <script>
+        // Demo data for different evidence types
+        const demoEvidenceData = {
+            pdf: {
+                id: 'EVD-001',
+                case_id: 'CASE-2024-001',
+                title: 'Legal Document',
+                file_name: 'Legal_Document.pdf',
+                file_size: 2457600,
+                type: 'application/pdf',
+                hash: 'a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456',
+                submitted_by: '0x1234567890123456789012345678901234567890',
+                timestamp: '2024-01-15T10:30:00Z',
+                status: 'verified'
+            },
+            image: {
+                id: 'EVD-002',
+                case_id: 'CASE-2024-002',
+                title: 'Crime Scene Photo',
+                file_name: 'Crime_Scene_Photo.jpg',
+                file_size: 9123456,
+                type: 'image/jpeg',
+                hash: 'b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef1234567',
+                submitted_by: '0x2345678901234567890123456789012345678901',
+                timestamp: '2024-01-16T14:20:00Z',
+                status: 'verified'
+            },
+            video: {
+                id: 'EVD-003',
+                case_id: 'CASE-2024-003',
+                title: 'Security Footage',
+                file_name: 'Security_Footage.mp4',
+                file_size: 163577856,
+                type: 'video/mp4',
+                hash: 'c3d4e5f6789012345678901234567890abcdef1234567890abcdef12345678',
+                submitted_by: '0x3456789012345678901234567890123456789012',
+                timestamp: '2024-01-17T09:15:00Z',
+                status: 'verified'
+            },
+            audio: {
+                id: 'EVD-004',
+                case_id: 'CASE-2024-004',
+                title: 'Phone Recording',
+                file_name: 'Phone_Recording.mp3',
+                file_size: 12902400,
+                type: 'audio/mp3',
+                hash: 'd4e5f6789012345678901234567890abcdef1234567890abcdef123456789',
+                submitted_by: '0x4567890123456789012345678901234567890123',
+                timestamp: '2024-01-18T16:45:00Z',
+                status: 'verified'
+            },
+            document: {
+                id: 'EVD-005',
+                case_id: 'CASE-2024-005',
+                title: 'Witness Statement',
+                file_name: 'Witness_Statement.docx',
+                file_size: 1258291,
+                type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                hash: 'e5f6789012345678901234567890abcdef1234567890abcdef1234567890',
+                submitted_by: '0x5678901234567890123456789012345678901234',
+                timestamp: '2024-01-19T11:30:00Z',
+                status: 'verified'
+            },
+            archive: {
+                id: 'EVD-006',
+                case_id: 'CASE-2024-006',
+                title: 'Digital Evidence',
+                file_name: 'Digital_Evidence.zip',
+                file_size: 48025600,
+                type: 'application/zip',
+                hash: 'f6789012345678901234567890abcdef1234567890abcdef12345678901',
+                submitted_by: '0x6789012345678901234567890123456789012345',
+                timestamp: '2024-01-20T13:20:00Z',
+                status: 'verified'
+            }
+        };
+
+        // Initialize demo
+        document.addEventListener('DOMContentLoaded', function() {
+            lucide.createIcons();
+            
+            // Set up demo user
+            localStorage.setItem('currentUser', '0x1234567890123456789012345678901234567890');
+            localStorage.setItem('userRole', 'forensic_analyst');
+        });
+
+        // Open demo preview
+        function openDemoPreview(type) {
+            const evidenceData = demoEvidenceData[type];
+            if (evidenceData && window.evidencePreview) {
+                evidencePreview.openPreview(evidenceData.id, evidenceData);
+            } else {
+                alert('Preview system is loading. Please try again in a moment.');
+            }
+        }
+
+        // Add hover effects to demo items
+        document.querySelectorAll('.evidence-demo-item').forEach(item => {
+            item.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-5px)';
+                this.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.15)';
+            });
+            
+            item.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+                this.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+            });
+        });
+    </script>
+
+    <style>
+        .preview-demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .evidence-demo-item {
+            background: var(--white);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .evidence-demo-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            border-color: var(--primary-red);
+        }
+
+        .evidence-icon {
+            font-size: 3rem;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .evidence-info h3 {
+            color: var(--text-primary);
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .evidence-info p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin: 0.25rem 0;
+        }
+
+        .preview-demo-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--primary-red);
+            color: var(--white);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            margin-top: 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .preview-demo-btn:hover {
+            background: var(--primary-red-dark);
+            transform: translateY(-2px);
+        }
+
+        .features-showcase-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .feature-showcase-item {
+            background: var(--light-gray);
+            padding: 1.5rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .feature-showcase-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .feature-showcase-item h3 {
+            color: var(--text-primary);
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .feature-showcase-item ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .feature-showcase-item li {
+            padding: 0.5rem 0;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border-light);
+            position: relative;
+            padding-left: 1.5rem;
+        }
+
+        .feature-showcase-item li:before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--primary-red);
+            font-weight: bold;
+        }
+
+        .feature-showcase-item li:last-child {
+            border-bottom: none;
+        }
+
+        .shortcuts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .shortcut-category h3 {
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--primary-red);
+        }
+
+        .shortcut-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .shortcut-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem;
+            background: var(--light-gray);
+            border-radius: 6px;
+        }
+
+        kbd {
+            background: var(--text-primary);
+            color: var(--white);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-family: monospace;
+            margin: 0 0.25rem;
+        }
+
+        .shortcut-item span {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .preview-demo-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .features-showcase-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .shortcuts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</body>
+</html>
