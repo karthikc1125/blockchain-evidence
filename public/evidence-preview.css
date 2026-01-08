@@ -1,0 +1,146 @@
+/* Evidence Preview Modal Styles */
+.evidence-modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    justify-content: center;
+    align-items: center;
+}
+
+.evidence-modal-content {
+    background: white;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.evidence-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #e5e7eb;
+    background: #f9fafb;
+}
+
+.evidence-modal-header h3 {
+    margin: 0;
+    color: #1f2937;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #6b7280;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.close-btn:hover {
+    color: #374151;
+}
+
+.evidence-modal-body {
+    padding: 20px;
+    max-height: calc(90vh - 80px);
+    overflow-y: auto;
+}
+
+#evidence-viewer {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.file-preview {
+    padding: 40px;
+    background: #f3f4f6;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.evidence-info {
+    border-top: 1px solid #e5e7eb;
+    padding-top: 20px;
+}
+
+.evidence-metadata {
+    margin-bottom: 20px;
+}
+
+.metadata-item {
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.metadata-item strong {
+    color: #374151;
+}
+
+.metadata-item code {
+    background: #f3f4f6;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 12px;
+}
+
+.status-pending { color: #f59e0b; }
+.status-verified { color: #10b981; }
+.status-rejected { color: #ef4444; }
+
+.evidence-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-download, .btn-verify, .btn-preview {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+.btn-download {
+    background: #3b82f6;
+    color: white;
+}
+
+.btn-download:hover {
+    background: #2563eb;
+}
+
+.btn-verify {
+    background: #10b981;
+    color: white;
+}
+
+.btn-verify:hover {
+    background: #059669;
+}
+
+.btn-preview {
+    background: #6b7280;
+    color: white;
+    font-size: 12px;
+    padding: 4px 8px;
+}
+
+.btn-preview:hover {
+    background: #4b5563;
+}

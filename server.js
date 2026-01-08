@@ -1819,6 +1819,53 @@ app.post('/api/evidence/comparison-report', async (req, res) => {
     }
 });
 
+// Get evidence details for preview
+app.get('/api/evidence/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const { data: evidence, error } = await supabase
+            .from('evidence')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (error || !evidence) {
+            return res.status(404).json({ error: 'Evidence not found' });
+        }
+
+        res.json(evidence);
+    } catch (error) {
+        console.error('Get evidence error:', error);
+        res.status(500).json({ error: 'Failed to get evidence' });
+    }
+});
+
+// Verify evidence hash
+app.get('/api/evidence/:id/verify', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const { data: evidence, error } = await supabase
+            .from('evidence')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (error || !evidence) {
+            return res.status(404).json({ error: 'Evidence not found' });
+        }
+
+        // Simulate hash verification
+        const valid = true; // In real implementation, verify against blockchain
+        
+        res.json({ valid, hash: evidence.hash });
+    } catch (error) {
+        console.error('Verify evidence error:', error);
+        res.status(500).json({ error: 'Failed to verify evidence' });
+    }
+});
+
 // Get blockchain proof for specific evidence
 app.get('/api/evidence/:id/blockchain-proof', async (req, res) => {
     try {

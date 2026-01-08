@@ -246,6 +246,49 @@ INSERT INTO users (
     'real',
     'system_setup',
     true
+);
+
+-- Default tags for evidence categorization
+INSERT INTO tags (name, color, category, created_by) VALUES
+    ('Physical Evidence', '#EF4444', 'Type', 'system_setup'),
+    ('Digital Evidence', '#3B82F6', 'Type', 'system_setup'),
+    ('Document', '#10B981', 'Type', 'system_setup'),
+    ('Audio', '#F59E0B', 'Type', 'system_setup'),
+    ('Video', '#8B5CF6', 'Type', 'system_setup'),
+    ('High Priority', '#DC2626', 'Priority', 'system_setup'),
+    ('Medium Priority', '#F59E0B', 'Priority', 'system_setup'),
+    ('Low Priority', '#059669', 'Priority', 'system_setup'),
+    ('Confidential', '#7C2D12', 'Classification', 'system_setup'),
+    ('Restricted', '#B91C1C', 'Classification', 'system_setup');
+
+-- Database setup completed successfully!
+-- Change the admin wallet address above to your actual MetaMask address before running this scriptrue
+);
+
+-- Default tags for evidence categorization
+INSERT INTO tags (name, color, category, created_by) VALUES
+    ('Physical Evidence', '#EF4444', 'Type', 'system_setup'),
+    ('Digital Evidence', '#3B82F6', 'Type', 'system_setup'),
+    ('Document', '#10B981', 'Type', 'system_setup'),
+    ('Audio', '#F59E0B', 'Type', 'system_setup'),
+    ('Video', '#8B5CF6', 'Type', 'system_setup'),
+    ('High Priority', '#DC2626', 'Priority', 'system_setup'),
+    ('Medium Priority', '#F59E0B', 'Priority', 'system_setup'),
+    ('Low Priority', '#059669', 'Priority', 'system_setup'),
+    ('Confidential', '#7C2D12', 'Classification', 'system_setup'),
+    ('Restricted', '#B91C1C', 'Classification', 'system_setup');
+
+-- ============================================================================
+-- COMPLETION MESSAGE
+-- ============================================================================
+
+-- Database setup completed successfully!
+-- You can now:
+-- 1. Start your application server
+-- 2. Connect with MetaMask using the admin wallet: 0x29bb7718d5c6da6e787deae8fd6bb3459e8539f2
+-- 3. Access the admin dashboard to manage users and evidence
+
+-- Note: Change the admin wallet address above to your actual MetaMask address before running this scriptrue
 ) ON CONFLICT (wallet_address) DO NOTHING;
 
 -- Default tags
