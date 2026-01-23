@@ -27,16 +27,142 @@ const roleMapping = {
     8: 'admin'
 };
 
-    document.addEventListener('DOMContentLoaded', function () {
-        lucide.createIcons();
-        initializeApp();
-        
-        // Add click handler directly
-        const connectBtn = document.getElementById('connectWallet');
-        if (connectBtn) {
-            connectBtn.onclick = connectWallet;
+// Initialize application
+function initializeApp() {
+    lucide.createIcons();
+    initializeNavigation();
+    initializeScrollUp();
+    initializeRoleSelection();
+    initializeSections();
+    initializeParticles();
+    initializeFAQ();
+    
+    // Add click handler for wallet connection
+    const connectBtn = document.getElementById('connectWallet');
+    if (connectBtn) {
+        connectBtn.onclick = connectWallet;
+    }
+    
+    // Initialize forms
+    const registrationForm = document.getElementById('registrationForm');
+    if (registrationForm) {
+        registrationForm.addEventListener('submit', handleRegistration);
+    }
+    
+    const emailLoginForm = document.getElementById('emailLoginForm');
+    if (emailLoginForm) {
+        emailLoginForm.addEventListener('submit', handleEmailLogin);
+    }
+}
+
+// Missing navigation functions
+function scrollToTop() {
+    window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+    });
+}
+
+function showEmailLogin() {
+    hideAllSections();
+    const emailSection = document.getElementById('emailLoginSection');
+    if (emailSection) {
+        emailSection.classList.remove('hidden');
+    }
+}
+
+function hideEmailLogin() {
+    const emailSection = document.getElementById('emailLoginSection');
+    if (emailSection) {
+        emailSection.classList.add('hidden');
+    }
+    showSection('login-options');
+}
+
+function hideAllSections() {
+    const sections = [
+        'walletStatus', 'registrationSection', 'alreadyRegisteredSection', 
+        'adminOptionsSection', 'emailLoginSection'
+    ];
+    sections.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.classList.add('hidden');
         }
     });
+}
+
+function showSection(sectionId) {
+    const element = document.getElementById(sectionId);
+    if (element) {
+        element.classList.remove('hidden');
+    }
+}
+
+// FAQ functionality
+function initializeFAQ() {
+    const faqItems = document.querySelectorAll('.faq-item');
+    faqItems.forEach(item => {
+        const question = item.querySelector('.faq-question');
+        if (question) {
+            question.addEventListener('click', () => toggleFAQ(question));
+        }
+    });
+}
+
+function toggleFAQ(element) {
+    const faqItem = element.closest('.faq-item');
+    if (faqItem) {
+        faqItem.classList.toggle('active');
+        lucide.createIcons();
+    }
+}
+
+// Particles animation
+function initializeParticles() {
+    const particlesContainer = document.getElementById('particles');
+    if (!particlesContainer) return;
+    
+    for (let i = 0; i < 50; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.animationDelay = Math.random() * 25 + 's';
+        particle.style.animationDuration = (Math.random() * 10 + 15) + 's';
+        particlesContainer.appendChild(particle);
+    }
+}
+
+// Email login handler
+function handleEmailLogin(event) {
+    event.preventDefault();
+    
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    
+    if (!email || !password) {
+        showAlert('Please enter both email and password', 'error');
+        return;
+    }
+    
+    // Check localStorage for email users
+    const emailUserKey = 'emailUser_' + email;
+    const userData = localStorage.getItem(emailUserKey);
+    
+    if (userData) {
+        const user = JSON.parse(userData);
+        if (user.password === password) { // In production, use proper password hashing
+            localStorage.setItem('currentUser', 'email_' + email);
+            displayUserInfo(user);
+            toggleSections('alreadyRegistered');
+            showAlert('Login successful!', 'success');
+        } else {
+            showAlert('Invalid password', 'error');
+        }
+    } else {
+        showAlert('User not found. Please register first.', 'error');
+    }
+}
 
 function initializeSections() {
     // Hide all sections except wallet section on initial load
@@ -65,6 +191,33 @@ function initializeLucideIcons() {
             // Simple initialization
             lucide.createIcons();
         }
+
+// Check registration status after wallet connection
+async function checkRegistrationStatus() {
+    if (!userAccount) {
+        showAlert('Please connect your wallet first', 'error');
+        return;
+    }
+    
+    const savedUser = localStorage.getItem('evidUser_' + userAccount);
+    
+    if (savedUser) {
+        const userData = JSON.parse(savedUser);
+        displayUserInfo(userData);
+        
+        // Check if user is admin
+        if (userData.role === 'admin' || userData.role === 8) {
+            displayAdminOptions(userData);
+            toggleSections('adminOptions');
+        } else {
+            toggleSections('alreadyRegistered');
+        }
+    } else {
+        // Create test users if none exist
+        createTestUsers();
+        toggleSections('registration');
+    }
+}
 
 function initializeNavigation() {
     const menuToggle = document.getElementById('menuToggle');
@@ -431,40 +584,7 @@ async function connectWallet() {
         // Mark as connected for future auto-connection
         localStorage.setItem('wasConnected', 'true');
 
-        async function connectWallet() {
-            console.log('Connect wallet clicked');
-            
-            if (!window.ethereum) {
-                alert('Please install MetaMask!');
-                return;
-            }
 
-            try {
-                const accounts = await window.ethereum.request({
-                    method: 'eth_requestAccounts'
-                });
-
-                if (accounts && accounts.length > 0) {
-                    userAccount = accounts[0];
-                    localStorage.setItem('currentUser', userAccount);
-                    
-                    // Hide wallet section, show role wizard
-                    document.getElementById('walletSection').classList.add('hidden');
-                    
-                    if (typeof showRoleWizard === 'function') {
-                        showRoleWizard(userAccount);
-                    } else {
-                        // Fallback - go directly to role selection
-                        toggleSections('registration');
-                    }
-                } else {
-                    alert('No accounts found. Please unlock MetaMask.');
-                }
-            } catch (error) {
-                console.error('Connection error:', error);
-                alert('Connection failed: ' + error.message);
-            }
-        }
 
     } catch (error) {
         showLoading(false);
@@ -882,3 +1002,20 @@ window.EVID_DGC = {
     scrollToSection,
     getUserRole
 };
+
+// Initialize application when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    initializeApp();
+});
+
+// Global error handler
+window.addEventListener('error', function(event) {
+    console.error('Global error:', event.error);
+    showAlert('An unexpected error occurred. Please refresh the page.', 'error');
+});
+
+// Unhandled promise rejection handler
+window.addEventListener('unhandledrejection', function(event) {
+    console.error('Unhandled promise rejection:', event.reason);
+    showAlert('A network error occurred. Please check your connection.', 'error');
+});

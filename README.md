@@ -82,20 +82,20 @@ The system implements 8 distinct roles to ensure strict access control:
 ## 📁 Folder Structure
 
 ```text
-├── build/                    # Compiled contracts and build artifacts
 ├── contracts/               # Solidity smart contracts
 ├── docs/                    # Detailed project documentation
+├── lib/                     # Specialized utility modules
 ├── public/                  # Frontend assets (HTML, JS, CSS)
 │   ├── dashboard-*.html    # Role-specific dashboard views
 │   ├── app.js              # Core frontend logic
 │   └── styles.css          # Global styling
+├── tests/                   # Test suites and utilities
 ├── server.js                # Express backend server with Socket.IO
-├── complete-database-setup.sql # Complete core database structure
+├── complete-database-setup.sql # Core database structure
 ├── evidence-tagging-schema.sql # Tags system database schema
 ├── evidence-export-schema.sql  # Export system database schema
-├── REAL_TIME_NOTIFICATIONS.md # Notifications implementation details
-├── render.yaml              # Deployment configuration for Render
 ├── package.json             # Node.js dependencies and scripts
+├── render.yaml              # Deployment configuration for Render
 ├── SECURITY.md              # Security policy and reporting
 └── README.md                # Project documentation
 ```
@@ -148,33 +148,22 @@ git clone <repository-url>
 cd blockchain-evidence
 ```
 
-### 2. Install Dependencies
+### 2. Install Dependencies & Setup
 ```bash
-# Install all required packages
+# Install all required packages and run setup
 npm install
 
-# Or using yarn
-yarn install
+# Or run setup manually
+npm run setup
 ```
 
 ### 3. Environment Configuration
-```bash
-# Create environment file from example
-cp .env.example .env
-```
+The setup script creates a `.env` file automatically. Update it with your Supabase credentials:
 
-Edit `.env` file with your configuration:
 ```env
-# Supabase Configuration
+# Update these values in .env
 SUPABASE_URL=your_supabase_project_url
 SUPABASE_KEY=your_supabase_anon_key
-
-# Server Configuration
-PORT=3000
-NODE_ENV=development
-
-# Blockchain Network (optional for local development)
-BLOCKCHAIN_NETWORK=localhost
 ```
 
 ### 4. Database Setup
@@ -194,15 +183,7 @@ BLOCKCHAIN_NETWORK=localhost
 -- Copy and run: evidence-export-schema.sql
 ```
 
-**Note**: You can edit the initial admin wallet address at the end of `complete-database-setup.sql` before running.
-
-### 5. MetaMask Configuration
-1. Install MetaMask extension in your browser
-2. Create or import a wallet
-3. Add the admin wallet address to the database (in SQL step above)
-4. For local blockchain testing, configure Ganache network in MetaMask
-
-### 6. Start Development Server
+### 5. Start Development Server
 ```bash
 # Start the backend server with auto-reload
 npm run dev
@@ -213,31 +194,47 @@ npm start
 
 The server will start on `http://localhost:3000`
 
-### 7. Access the Application
+### 6. Access the Application
 Open your browser and navigate to:
 - **Main Application**: http://localhost:3000
-- **Admin Dashboard**: http://localhost:3000/admin.html
-- **API Health Check**: http://localhost:3000/health
+- **Health Check**: http://localhost:3000/api/health
 
-### 8. Test User Login
-For development and testing:
+### 7. Test the System
 1. Navigate to the login page
-2. Use MetaMask to connect with the admin wallet
-3. Or use email/password authentication (if configured)
+2. Use MetaMask to connect with any wallet
+3. The system will create test users automatically
+4. Select a role and complete registration
 
-### Common Development Commands
+### Quick Troubleshooting
+
+**Issue: "Config not defined" error**
+- Solution: Ensure `config.js` is loaded before `app.js` in HTML
+
+**Issue: Navigation not working**
+- Solution: Check browser console for JavaScript errors
+- Ensure Lucide icons are loading properly
+
+**Issue: Wallet connection fails**
+- Solution: Install MetaMask browser extension
+- Check browser console for detailed error messages
+
+**Issue: Server won't start**
+- Solution: Check `.env` file exists and has correct format
+- Ensure port 3000 is not in use by another application
+
+### Development Commands
 ```bash
 # Install new dependency
 npm install package-name
 
+# Run setup script
+npm run setup
+
+# Check server health
+npm run health
+
 # Run tests
 npm test
-
-# Check for linting errors
-npm run lint
-
-# Build for production
-npm run build
 ```
 
 ---

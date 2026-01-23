@@ -1,3 +1,5 @@
 {
-    "secret-stack.promptToScanBeforePush": "30days"
+    "secret-stack.promptToScanBeforePush": "30days",
+    "snyk.advanced.organization": "96f9c1e0-78fb-463b-aaa0-3b8e873e4bd2",
+    "snyk.advanced.autoSelectOrganization": true
 }

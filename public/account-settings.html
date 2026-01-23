@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="favicon.png" type="image/png"><link rel="shortcut icon" href="favicon.png" type="image/png"><title>Account Settings | EVID-DGC</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="accessibility-fixes.css">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+</head>
+<body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <!-- Navigation -->
+    <header class="header-nav">
+        <div class="navbar-container">
+            <div class="nav-brand">
+                <i data-lucide="shield-check"></i>
+                <span>EVID-DGC</span>
+            </div>
+            <nav class="nav-menu">
+                <a href="dashboard.html" class="nav-link">
+                    <i data-lucide="arrow-left"></i>
+                    <span>Back to Dashboard</span>
+                </a>
+                <button onclick="logout()" class="nav-link">
+                    <i data-lucide="log-out"></i>
+                    <span>Logout</span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container" id="main-content">
+        <div class="settings-layout">
+            <!-- Settings Sidebar -->
+            <div class="settings-sidebar">
+                <h2>Account Settings</h2>
+                <nav class="settings-nav">
+                    <a href="#profile" class="settings-nav-item active" onclick="showSettingsTab('profile')">
+                        <i data-lucide="user"></i>
+                        Profile
+                    </a>
+                    <a href="#security" class="settings-nav-item" onclick="showSettingsTab('security')">
+                        <i data-lucide="shield"></i>
+                        Security
+                    </a>
+                    <a href="#sessions" class="settings-nav-item" onclick="showSettingsTab('sessions')">
+                        <i data-lucide="monitor"></i>
+                        Active Sessions
+                    </a>
+                    <a href="#notifications" class="settings-nav-item" onclick="showSettingsTab('notifications')">
+                        <i data-lucide="bell"></i>
+                        Notifications
+                    </a>
+                </nav>
+            </div>
+
+            <!-- Settings Content -->
+            <div class="settings-content">
+                <!-- Profile Tab -->
+                <div id="profile-tab" class="settings-tab active">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Profile Information</h3>
+                            <p>Update your personal information and role details</p>
+                        </div>
+                        <form id="profileForm" class="card-body">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="fullName">Full Name *</label>
+                                    <input type="text" id="fullName" class="form-control" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="email">Email Address</label>
+                                    <input type="email" id="email" class="form-control" readonly>
+                                    <small class="form-help">Email cannot be changed</small>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="department">Department/Organization</label>
+                                    <input type="text" id="department" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label for="jurisdiction">Jurisdiction</label>
+                                    <input type="text" id="jurisdiction" class="form-control">
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="badgeNumber">Badge/ID Number</label>
+                                    <input type="text" id="badgeNumber" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label for="currentRole">Current Role</label>
+                                    <input type="text" id="currentRole" class="form-control" readonly>
+                                    <small class="form-help">Contact admin to change role</small>
+                                </div>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">
+                                    <i data-lucide="save"></i>
+                                    Save Changes
+                                </button>
+                                <button type="button" class="btn btn-outline" onclick="resetProfileForm()">
+                                    <i data-lucide="refresh-cw"></i>
+                                    Reset
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Security Tab -->
+                <div id="security-tab" class="settings-tab">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Password & Security</h3>
+                            <p>Manage your password and security settings</p>
+                        </div>
+                        <div class="card-body">
+                            <!-- Change Password -->
+                            <div class="security-section">
+                                <h4>Change Password</h4>
+                                <form id="passwordForm">
+                                    <div class="form-group">
+                                        <label for="currentPassword">Current Password *</label>
+                                        <input type="password" id="currentPassword" class="form-control" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="newPassword">New Password *</label>
+                                        <input type="password" id="newPassword" class="form-control" required minlength="6">
+                                        <div class="password-strength">
+                                            <div class="strength-bar">
+                                                <div class="strength-fill"></div>
+                                            </div>
+                                            <span class="strength-text">Password strength: Weak</span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="confirmPassword">Confirm New Password *</label>
+                                        <input type="password" id="confirmPassword" class="form-control" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i data-lucide="key"></i>
+                                        Update Password
+                                    </button>
+                                </form>
+                            </div>
+
+                            <!-- Two-Factor Authentication -->
+                            <div class="security-section">
+                                <h4>Two-Factor Authentication</h4>
+                                <div class="security-option">
+                                    <div class="security-info">
+                                        <strong>Authenticator App</strong>
+                                        <p>Use an authenticator app for additional security</p>
+                                    </div>
+                                    <div class="security-action">
+                                        <span id="twoFactorStatus" class="status-badge disabled">Disabled</span>
+                                        <button id="twoFactorToggle" class="btn btn-outline" onclick="toggleTwoFactor()">
+                                            Enable
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sessions Tab -->
+                <div id="sessions-tab" class="settings-tab">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Active Sessions</h3>
+                            <p>Manage your active login sessions across devices</p>
+                        </div>
+                        <div class="card-body">
+                            <div class="sessions-list" id="sessionsList">
+                                <!-- Sessions will be loaded here -->
+                            </div>
+                            <div class="form-actions">
+                                <button class="btn btn-danger" onclick="logoutAllSessions()">
+                                    <i data-lucide="log-out"></i>
+                                    Logout All Other Sessions
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notifications Tab -->
+                <div id="notifications-tab" class="settings-tab">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Notification Preferences</h3>
+                            <p>Choose what notifications you want to receive</p>
+                        </div>
+                        <div class="card-body">
+                            <div class="notification-settings">
+                                <div class="notification-group">
+                                    <h4>Evidence Notifications</h4>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="evidenceUploads" checked>
+                                        <span class="toggle-slider"></span>
+                                        <span class="toggle-label">Evidence uploads and updates</span>
+                                    </label>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="evidenceVerification" checked>
+                                        <span class="toggle-slider"></span>
+                                        <span class="toggle-label">Evidence verification results</span>
+                                    </label>
+                                </div>
+
+                                <div class="notification-group">
+                                    <h4>Case Notifications</h4>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="caseAssignments" checked>
+                                        <span class="toggle-slider"></span>
+                                        <span class="toggle-label">Case assignments</span>
+                                    </label>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="caseUpdates" checked>
+                                        <span class="toggle-slider"></span>
+                                        <span class="toggle-label">Case status updates</span>
+                                    </label>
+                                </div>
+
+                                <div class="notification-group">
+                                    <h4>System Notifications</h4>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="systemAlerts" checked>
+                                        <span class="toggle-slider"></span>
+                                        <span class="toggle-label">System alerts and maintenance</span>
+                                    </label>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="securityAlerts" checked>
+                                        <span class="toggle-slider"></span>
+                                        <span class="toggle-label">Security alerts</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button class="btn btn-primary" onclick="saveNotificationSettings()">
+                                    <i data-lucide="save"></i>
+                                    Save Preferences
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="accessibility-manager.js"></script>
+    <script src="account-settings.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            lucide.createIcons();
+            initializeAccountSettings();
+        });
+    </script>
+</body>
+</html>

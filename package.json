@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
+    "setup": "node setup.js",
     "health": "node health-check.js",
     "test": "node tests/ComprehensiveTestRunner.js",
     "test:forensic": "node tests/ComprehensiveTestRunner.js --no-load",
@@ -16,7 +17,8 @@
     "test:headed": "node tests/ComprehensiveTestRunner.js --headed",
     "test:ci": "node tests/ComprehensiveTestRunner.js --no-report",
     "lint": "echo 'Linting not configured'",
-    "build": "echo 'Build not required for this project'"
+    "build": "echo 'Build not required for this project'",
+    "postinstall": "node setup.js"
   },
   "keywords": [
     "blockchain",

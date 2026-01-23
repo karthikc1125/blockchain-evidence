@@ -1,0 +1,151 @@
+/* WCAG 2.1 AA Accessibility Fixes */
+
+/* High Text Contrast - WCAG 2.0 AAA 1.4.6 */
+.low-contrast-text {
+    color: #000000 !important; /* Changed from light gray */
+}
+
+.secondary-text {
+    color: #4a5568 !important; /* Improved contrast ratio */
+}
+
+/* Focus Indicators - WCAG 2.1 AA 2.4.7 */
+*:focus-visible {
+    outline: 2px solid #2563eb !important;
+    outline-offset: 2px !important;
+    border-radius: 2px;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible {
+    outline: 2px solid #2563eb !important;
+    outline-offset: 2px !important;
+}
+
+/* Large Enough Controls - WCAG 2.1 AAA 2.5.5 */
+button,
+input[type="button"],
+input[type="submit"],
+.btn {
+    min-height: 44px !important;
+    min-width: 44px !important;
+    padding: 8px 16px !important;
+}
+
+/* Form Labels - WCAG 2.0 A 1.3.1 */
+.form-group {
+    position: relative;
+}
+
+.form-control {
+    border: 1px solid #d1d5db;
+    padding: 8px 12px;
+    border-radius: 4px;
+}
+
+.form-control:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Screen Reader Only Text */
+.sr-only {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+
+/* External Link Indicators */
+.external-link::after {
+    content: " (opens in new tab)";
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+/* Skip to Content Link */
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 6px;
+    background: #000;
+    color: #fff;
+    padding: 8px;
+    text-decoration: none;
+    z-index: 1000;
+    border-radius: 4px;
+}
+
+.skip-link:focus {
+    top: 6px;
+}
+
+/* Modal Focus Trap */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+.modal-content {
+    position: relative;
+    background: white;
+    margin: 50px auto;
+    padding: 20px;
+    max-width: 500px;
+    border-radius: 8px;
+}
+
+/* Keyboard Navigation Indicators */
+.nav-link:focus-visible,
+.menu-item:focus-visible {
+    background-color: #eff6ff;
+    outline: 2px solid #2563eb;
+}
+
+/* Error States */
+.form-error {
+    color: #dc2626;
+    font-size: 0.875rem;
+    margin-top: 4px;
+}
+
+.form-control.error {
+    border-color: #dc2626;
+}
+
+/* Loading States */
+.loading {
+    position: relative;
+}
+
+.loading::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid #f3f4f6;
+    border-top: 2px solid #2563eb;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
