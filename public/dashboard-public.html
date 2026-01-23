@@ -88,6 +88,39 @@
             outline: none;
             border-color: #10b981;
         }
+
+        .search-results-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .search-result-item {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f9fafb;
+        }
+
+        .search-result-item h5 {
+            margin: 0 0 8px 0;
+            color: #1f2937;
+        }
+
+        .case-summary {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #10b981;
+        }
+
+        .evidence-item {
+            transition: all 0.2s ease;
+        }
+
+        .evidence-item:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
     </style>
 </head>
 
@@ -151,8 +184,8 @@
                         <p><strong>Date:</strong> February 15, 2024</p>
                         <p><strong>Status:</strong> Investigation Complete</p>
                         <div style="margin-top: 15px;">
-                            <button class="btn btn-sm btn-outline">View Summary</button>
-                            <button class="btn btn-sm btn-outline">Evidence List</button>
+                            <button class="btn btn-sm btn-outline" onclick="viewCaseSummary('PUB-2024-001')">View Summary</button>
+                            <button class="btn btn-sm btn-outline" onclick="viewEvidenceList('PUB-2024-001')">Evidence List</button>
                         </div>
                     </div>
 
@@ -167,8 +200,8 @@
                         <p><strong>Date:</strong> February 20, 2024</p>
                         <p><strong>Status:</strong> Resolved</p>
                         <div style="margin-top: 15px;">
-                            <button class="btn btn-sm btn-outline">View Summary</button>
-                            <button class="btn btn-sm btn-outline">Evidence List</button>
+                            <button class="btn btn-sm btn-outline" onclick="viewCaseSummary('PUB-2024-002')">View Summary</button>
+                            <button class="btn btn-sm btn-outline" onclick="viewEvidenceList('PUB-2024-002')">Evidence List</button>
                         </div>
                     </div>
 
@@ -183,8 +216,8 @@
                         <p><strong>Date:</strong> February 25, 2024</p>
                         <p><strong>Status:</strong> Case Closed</p>
                         <div style="margin-top: 15px;">
-                            <button class="btn btn-sm btn-outline">View Summary</button>
-                            <button class="btn btn-sm btn-outline">Evidence List</button>
+                            <button class="btn btn-sm btn-outline" onclick="viewCaseSummary('PUB-2024-003')">View Summary</button>
+                            <button class="btn btn-sm btn-outline" onclick="viewEvidenceList('PUB-2024-003')">Evidence List</button>
                         </div>
                     </div>
                 </div>
@@ -290,10 +323,137 @@
                 currentUser = userData;
                 updateUserInterface();
                 loadDashboardData();
+                initializeTabs();
 
             } catch (error) {
                 console.error('Dashboard initialization error:', error);
                 alert('Failed to load dashboard. Please try again.');
+            }
+        }
+
+        function initializeTabs() {
+            // Add click handlers for tab navigation
+            document.addEventListener('click', function(e) {
+                if (e.target.matches('[data-tab]')) {
+                    e.preventDefault();
+                    const tabName = e.target.getAttribute('data-tab');
+                    switchTab(tabName);
+                }
+            });
+        }
+
+        function switchTab(tabName) {
+            console.log('Switching to tab:', tabName);
+            
+            switch(tabName) {
+                case 'cases':
+                    window.location.href = 'cases.html';
+                    break;
+                case 'search':
+                    showSearchInterface();
+                    break;
+                default:
+                    console.log('Unknown tab:', tabName);
+            }
+        }
+
+        function showSearchInterface() {
+            const searchModal = document.createElement('div');
+            searchModal.className = 'modal active';
+            searchModal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>🔍 Search Cases & Evidence</h3>
+                        <button class="modal-close" onclick="this.closest('.modal').remove()">
+                            <i data-lucide="x"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label>Search Term</label>
+                            <input type="text" id="searchTerm" class="form-control" placeholder="Enter case ID, keywords, or location...">
+                        </div>
+                        <div class="form-group">
+                            <label>Search Type</label>
+                            <select id="searchType" class="form-control">
+                                <option value="all">All Records</option>
+                                <option value="cases">Cases Only</option>
+                                <option value="evidence">Evidence Only</option>
+                            </select>
+                        </div>
+                        <div class="form-actions">
+                            <button onclick="performSearch()" class="btn btn-primary">
+                                <i data-lucide="search"></i> Search
+                            </button>
+                            <button onclick="this.closest('.modal').remove()" class="btn btn-outline">Cancel</button>
+                        </div>
+                        <div id="searchResults" class="search-results" style="margin-top: 20px;"></div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(searchModal);
+            lucide.createIcons();
+        }
+
+        function performSearch() {
+            const searchTerm = document.getElementById('searchTerm').value.toLowerCase();
+            const searchType = document.getElementById('searchType').value;
+            const resultsDiv = document.getElementById('searchResults');
+            
+            if (!searchTerm.trim()) {
+                resultsDiv.innerHTML = '<p class="text-warning">Please enter a search term.</p>';
+                return;
+            }
+            
+            const cases = JSON.parse(localStorage.getItem('cases') || '[]');
+            const evidence = JSON.parse(localStorage.getItem('evidence') || '[]');
+            
+            let results = [];
+            
+            if (searchType === 'all' || searchType === 'cases') {
+                const caseResults = cases.filter(c => 
+                    (c.status === 'CLOSED' || c.isPublic) &&
+                    (c.id.toLowerCase().includes(searchTerm) ||
+                     c.title.toLowerCase().includes(searchTerm) ||
+                     c.location?.toLowerCase().includes(searchTerm))
+                ).map(c => ({...c, type: 'case'}));
+                results = results.concat(caseResults);
+            }
+            
+            if (searchType === 'all' || searchType === 'evidence') {
+                const evidenceResults = evidence.filter(e => 
+                    (e.isPublic || e.status === 'Verified') &&
+                    (e.title.toLowerCase().includes(searchTerm) ||
+                     e.description?.toLowerCase().includes(searchTerm))
+                ).map(e => ({...e, type: 'evidence'}));
+                results = results.concat(evidenceResults);
+            }
+            
+            if (results.length > 0) {
+                let html = `<h4>Search Results (${results.length} found):</h4><div class="search-results-list">`;
+                results.forEach(item => {
+                    if (item.type === 'case') {
+                        html += `
+                            <div class="search-result-item">
+                                <h5>📋 Case: ${item.title}</h5>
+                                <p><strong>ID:</strong> ${item.id} | <strong>Status:</strong> ${item.status}</p>
+                                <p><strong>Location:</strong> ${item.location || 'N/A'} | <strong>Date:</strong> ${item.date}</p>
+                            </div>
+                        `;
+                    } else {
+                        html += `
+                            <div class="search-result-item">
+                                <h5>📎 Evidence: ${item.title}</h5>
+                                <p><strong>Type:</strong> ${item.type} | <strong>Status:</strong> ${item.status}</p>
+                                <p><strong>Case:</strong> ${item.case_id} | <strong>Date:</strong> ${new Date(item.timestamp).toLocaleDateString()}</p>
+                            </div>
+                        `;
+                    }
+                });
+                html += '</div>';
+                resultsDiv.innerHTML = html;
+            } else {
+                resultsDiv.innerHTML = `<p class="text-muted">No public records found matching "${searchTerm}".</p>`;
             }
         }
 
@@ -354,6 +514,133 @@
                 localStorage.clear();
                 window.location.href = 'index.html';
             }
+        }
+
+        function viewCaseSummary(caseId) {
+            const caseData = {
+                'PUB-2024-001': {
+                    title: 'Downtown Burglary Case',
+                    description: 'Investigation of commercial burglary in downtown district involving multiple businesses.',
+                    officer: 'Detective Johnson',
+                    dateOpened: 'February 15, 2024',
+                    dateClosed: 'March 10, 2024',
+                    status: 'Investigation Complete',
+                    location: 'Downtown District',
+                    evidenceCount: 12
+                },
+                'PUB-2024-002': {
+                    title: 'Public Safety Incident',
+                    description: 'Public safety incident at City Park involving vandalism and property damage.',
+                    officer: 'Officer Smith',
+                    dateOpened: 'February 20, 2024',
+                    dateClosed: 'February 28, 2024',
+                    status: 'Resolved',
+                    location: 'City Park',
+                    evidenceCount: 8
+                },
+                'PUB-2024-003': {
+                    title: 'Traffic Investigation',
+                    description: 'Traffic accident investigation on Main Street with multiple vehicles involved.',
+                    officer: 'Sergeant Davis',
+                    dateOpened: 'February 25, 2024',
+                    dateClosed: 'March 5, 2024',
+                    status: 'Case Closed',
+                    location: 'Main Street',
+                    evidenceCount: 15
+                }
+            };
+
+            const data = caseData[caseId];
+            if (!data) return;
+
+            const modal = document.createElement('div');
+            modal.className = 'modal active';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>📋 Case Summary - ${caseId}</h3>
+                        <button class="modal-close" onclick="this.closest('.modal').remove()">
+                            <i data-lucide="x"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="case-summary">
+                            <h4>${data.title}</h4>
+                            <p><strong>Description:</strong> ${data.description}</p>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0;">
+                                <div><strong>Assigned Officer:</strong> ${data.officer}</div>
+                                <div><strong>Location:</strong> ${data.location}</div>
+                                <div><strong>Date Opened:</strong> ${data.dateOpened}</div>
+                                <div><strong>Date Closed:</strong> ${data.dateClosed}</div>
+                                <div><strong>Status:</strong> <span class="case-status">${data.status}</span></div>
+                                <div><strong>Evidence Items:</strong> ${data.evidenceCount}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-actions">
+                        <button onclick="this.closest('.modal').remove()" class="btn btn-outline">Close</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            lucide.createIcons();
+        }
+
+        function viewEvidenceList(caseId) {
+            const evidenceData = {
+                'PUB-2024-001': [
+                    { id: 'E001', type: 'Photo', description: 'Security camera footage', date: '2024-02-15', hash: 'abc123...' },
+                    { id: 'E002', type: 'Document', description: 'Police report', date: '2024-02-15', hash: 'def456...' },
+                    { id: 'E003', type: 'Photo', description: 'Crime scene photos', date: '2024-02-16', hash: 'ghi789...' }
+                ],
+                'PUB-2024-002': [
+                    { id: 'E004', type: 'Photo', description: 'Damage assessment photos', date: '2024-02-20', hash: 'jkl012...' },
+                    { id: 'E005', type: 'Document', description: 'Witness statements', date: '2024-02-21', hash: 'mno345...' }
+                ],
+                'PUB-2024-003': [
+                    { id: 'E006', type: 'Photo', description: 'Accident scene photos', date: '2024-02-25', hash: 'pqr678...' },
+                    { id: 'E007', type: 'Video', description: 'Traffic camera footage', date: '2024-02-25', hash: 'stu901...' },
+                    { id: 'E008', type: 'Document', description: 'Vehicle inspection report', date: '2024-02-26', hash: 'vwx234...' }
+                ]
+            };
+
+            const evidence = evidenceData[caseId] || [];
+
+            const modal = document.createElement('div');
+            modal.className = 'modal active';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 800px;">
+                    <div class="modal-header">
+                        <h3>📁 Evidence List - ${caseId}</h3>
+                        <button class="modal-close" onclick="this.closest('.modal').remove()">
+                            <i data-lucide="x"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="evidence-list">
+                            ${evidence.length > 0 ? evidence.map(item => `
+                                <div class="evidence-item" style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; margin-bottom: 10px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <div>
+                                            <h5>${item.id} - ${item.description}</h5>
+                                            <p><strong>Type:</strong> ${item.type} | <strong>Date:</strong> ${item.date}</p>
+                                            <p><strong>Hash:</strong> <code style="font-size: 0.8em;">${item.hash}</code></p>
+                                        </div>
+                                        <div>
+                                            <span class="badge" style="background: #10b981; color: white; padding: 4px 8px; border-radius: 4px;">Verified</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('') : '<p class="text-muted">No evidence items available for public viewing.</p>'}
+                        </div>
+                    </div>
+                    <div class="modal-actions">
+                        <button onclick="this.closest('.modal').remove()" class="btn btn-outline">Close</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            lucide.createIcons();
         }
     </script>
 </body>

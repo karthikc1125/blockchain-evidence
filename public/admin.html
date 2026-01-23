@@ -185,34 +185,38 @@
         <!-- User Management -->
         <div class="admin-section card">
             <div class="card-header">
-                <h2>User Management</h2>
-                <p>View and manage all system users</p>
-            </div>
-            <div class="card-body">
-                <div class="mb-4">
+                <h2>👥 User Management</h2>
+                <p>Manage system users and administrator privileges</p>
+                <div class="card-actions">
+                    <button class="btn btn-primary" onclick="showAddAdminModal()">
+                        <i data-lucide="user-plus"></i>
+                        Add New Admin
+                    </button>
                     <button class="btn btn-outline" onclick="loadAllUsers()">
                         <i data-lucide="refresh-cw"></i>
                         Refresh Users
                     </button>
-                    <span id="userCount" class="ml-4 text-muted">Loading...</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="mb-4">
+                    <span id="userCount" class="text-muted">Loading...</span>
                 </div>
 
                 <div class="table-container">
                     <table class="user-table">
                         <thead>
                             <tr>
-                                <th>Wallet Address</th>
-                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Wallet</th>
                                 <th>Role</th>
-                                <th>Type</th>
                                 <th>Status</th>
-                                <th>Created</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="usersTableBody">
                             <tr>
-                                <td colspan="7" class="text-center">Loading users...</td>
+                                <td colspan="5" class="text-center">Loading users...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -582,12 +586,14 @@
                         return {
                             wallet_address: userData.walletAddress,
                             full_name: userData.fullName,
+                            email: userData.email || 'N/A',
                             role: userData.role,
                             account_type: userData.accountType || 'real',
                             is_active: true,
                             created_at: userData.registrationDate || new Date().toISOString()
                         };
-                    });
+                    })
+                    .filter(user => user.account_type !== 'test'); // Hide test accounts
 
                 const tbody = document.getElementById('usersTableBody');
                 const userCount = document.getElementById('userCount');
@@ -595,30 +601,224 @@
                 userCount.textContent = `Total Users: ${users.length}`;
 
                 if (users.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="7" class="text-center">No users found</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center">No users found</td></tr>';
                     return;
                 }
 
                 tbody.innerHTML = users.map(user => `
-                    <tr class="${user.account_type === 'test' ? 'test-account' : ''} ${!user.is_active ? 'inactive-user' : ''}">
-                        <td class="test-wallet">${user.wallet_address}</td>
-                        <td>${user.full_name}</td>
+                    <tr class="${!user.is_active ? 'inactive-user' : ''}">
+                        <td>${user.email}</td>
+                        <td class="wallet-address">${user.wallet_address.slice(0, 8)}...${user.wallet_address.slice(-6)}</td>
                         <td><span class="badge badge-${getRoleClass(user.role)}">${formatRole(user.role)}</span></td>
-                        <td>${user.account_type === 'test' ? 'Test' : 'Real'}</td>
-                        <td>${user.is_active ? 'Active' : 'Inactive'}</td>
-                        <td>${new Date(user.created_at).toLocaleDateString()}</td>
-                                <td>
-                            ${user.is_active && user.wallet_address !== currentAdmin ?
-                        `<button class="btn btn-sm btn-danger" onclick="deleteUser('${user.wallet_address}')">Delete</button>
-                         <button class="btn btn-sm btn-warning" onclick="requestRoleChange('${user.wallet_address}', '${user.role}')">Change Role</button>` :
-                        user.wallet_address === currentAdmin ? '<span class="text-muted">Self</span>' : '<span class="text-muted">Deleted</span>'
-                    }
+                        <td><span class="status-badge ${user.is_active ? 'status-active' : 'status-inactive'}">${user.is_active ? 'Active' : 'Inactive'}</span></td>
+                        <td class="action-buttons">
+                            ${user.wallet_address !== currentAdmin ? `
+                                ${user.role !== 'admin' ? `
+                                    <button class="btn btn-sm btn-warning" onclick="makeAdmin('${user.wallet_address}', '${user.full_name}')" title="Make Admin">
+                                        <i data-lucide="shield-plus"></i>
+                                        Make Admin
+                                    </button>
+                                ` : `
+                                    <span class="badge badge-admin">Admin</span>
+                                `}
+                                <button class="btn btn-sm btn-danger" onclick="deactivateUser('${user.wallet_address}', '${user.full_name}')" title="Deactivate User">
+                                    <i data-lucide="user-x"></i>
+                                    Deactivate
+                                </button>
+                            ` : '<span class="text-muted">Current Admin</span>'}
                         </td>
                     </tr>
                 `).join('');
+                
+                lucide.createIcons();
             } catch (error) {
                 showAlert('Error loading users: ' + error.message, 'error');
             }
+        }
+
+        function showAddAdminModal() {
+            const modal = document.createElement('div');
+            modal.className = 'modal active';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>👥 Add New Administrator</h3>
+                        <button class="modal-close" onclick="this.closest('.modal').remove()">
+                            <i data-lucide="x"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="addAdminForm">
+                            <div class="form-group">
+                                <label>Email Address *</label>
+                                <input type="email" id="adminEmail" class="form-control" placeholder="admin@example.com" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Wallet Address *</label>
+                                <div style="display: flex; gap: 10px;">
+                                    <input type="text" id="adminWallet" class="form-control" placeholder="0x..." required style="flex: 1;">
+                                    <button type="button" class="btn btn-outline btn-sm" onclick="generateWallet()">
+                                        Generate
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Full Name *</label>
+                                <input type="text" id="adminName" class="form-control" placeholder="Administrator Name" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Role</label>
+                                <select id="adminRole" class="form-control">
+                                    <option value="admin">Administrator</option>
+                                    <option value="auditor">Auditor</option>
+                                    <option value="evidence_manager">Evidence Manager</option>
+                                </select>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-actions">
+                        <button onclick="submitNewAdmin()" class="btn btn-primary">
+                            <i data-lucide="user-plus"></i>
+                            Add Administrator
+                        </button>
+                        <button onclick="this.closest('.modal').remove()" class="btn btn-outline">Cancel</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            lucide.createIcons();
+        }
+
+        function generateWallet() {
+            const chars = '0123456789abcdef';
+            let result = '0x';
+            for (let i = 0; i < 40; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            document.getElementById('adminWallet').value = result;
+        }
+
+        function submitNewAdmin() {
+            const email = document.getElementById('adminEmail').value.trim();
+            const wallet = document.getElementById('adminWallet').value.trim();
+            const name = document.getElementById('adminName').value.trim();
+            const role = document.getElementById('adminRole').value;
+
+            if (!email || !wallet || !name) {
+                showAlert('Please fill in all required fields', 'error');
+                return;
+            }
+
+            if (!wallet.match(/^0x[a-fA-F0-9]{40}$/)) {
+                showAlert('Invalid wallet address format', 'error');
+                return;
+            }
+
+            // Check if user already exists
+            if (localStorage.getItem(`evidUser_${wallet}`)) {
+                showAlert('User with this wallet address already exists', 'error');
+                return;
+            }
+
+            const adminData = {
+                walletAddress: wallet,
+                fullName: name,
+                email: email,
+                role: role,
+                department: 'Administration',
+                accountType: 'real',
+                isRegistered: true,
+                registrationDate: new Date().toISOString(),
+                createdBy: currentAdmin
+            };
+
+            localStorage.setItem(`evidUser_${wallet}`, JSON.stringify(adminData));
+            
+            // Log admin action
+            logAdminAction('create_admin', wallet, {
+                email: email,
+                name: name,
+                role: role
+            });
+
+            document.querySelector('.modal').remove();
+            showAlert(`Administrator ${name} created successfully!`, 'success');
+            loadAllUsers();
+        }
+
+        function makeAdmin(walletAddress, userName) {
+            if (!confirm(`Are you sure you want to make ${userName} an administrator?\n\nThis will grant them full system access.`)) {
+                return;
+            }
+
+            try {
+                const userData = JSON.parse(localStorage.getItem(`evidUser_${walletAddress}`));
+                userData.role = 'admin';
+                userData.department = 'Administration';
+                userData.promotedBy = currentAdmin;
+                userData.promotedAt = new Date().toISOString();
+                
+                localStorage.setItem(`evidUser_${walletAddress}`, JSON.stringify(userData));
+                
+                // Log admin action
+                logAdminAction('promote_admin', walletAddress, {
+                    previousRole: userData.role,
+                    newRole: 'admin',
+                    userName: userName
+                });
+
+                showAlert(`${userName} has been promoted to Administrator`, 'success');
+                loadAllUsers();
+            } catch (error) {
+                showAlert('Error promoting user: ' + error.message, 'error');
+            }
+        }
+
+        function deactivateUser(walletAddress, userName) {
+            if (!confirm(`Are you sure you want to deactivate ${userName}?\n\nThis will revoke their system access.`)) {
+                return;
+            }
+
+            try {
+                const userData = JSON.parse(localStorage.getItem(`evidUser_${walletAddress}`));
+                userData.is_active = false;
+                userData.deactivatedBy = currentAdmin;
+                userData.deactivatedAt = new Date().toISOString();
+                
+                localStorage.setItem(`evidUser_${walletAddress}`, JSON.stringify(userData));
+                
+                // Log admin action
+                logAdminAction('deactivate_user', walletAddress, {
+                    userName: userName,
+                    previousRole: userData.role
+                });
+
+                showAlert(`${userName} has been deactivated`, 'success');
+                loadAllUsers();
+            } catch (error) {
+                showAlert('Error deactivating user: ' + error.message, 'error');
+            }
+        }
+
+        function logAdminAction(actionType, targetWallet, details) {
+            const auditLog = {
+                id: Date.now(),
+                adminWallet: currentAdmin,
+                actionType: actionType,
+                targetWallet: targetWallet,
+                details: details,
+                timestamp: new Date().toISOString()
+            };
+
+            const existingLogs = JSON.parse(localStorage.getItem('adminAuditLog') || '[]');
+            existingLogs.unshift(auditLog);
+            
+            // Keep only last 100 logs
+            if (existingLogs.length > 100) {
+                existingLogs.splice(100);
+            }
+            
+            localStorage.setItem('adminAuditLog', JSON.stringify(existingLogs));
         }
 
         async function loadSystemOverview() {
@@ -756,3 +956,132 @@
 </body>
 
 </html>
+    <style>
+        .card-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .wallet-address {
+            font-family: monospace;
+            font-size: 0.9em;
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+        
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .badge-admin {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .inactive-user {
+            opacity: 0.6;
+            background: #f8f9fa;
+        }
+        
+        .btn-sm {
+            padding: 4px 8px;
+            font-size: 0.8em;
+        }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 0;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .modal-actions {
+            padding: 20px;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: #6b7280;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+    </style>

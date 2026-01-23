@@ -154,6 +154,8 @@
         };
 
         let progressInterval;
+        let retryCount = 0;
+        const MAX_RETRIES = 2;
 
         document.addEventListener('DOMContentLoaded', function () {
             lucide.createIcons();
@@ -171,7 +173,7 @@
                 }
 
                 updateProgress('Checking authentication...', 30);
-                await new Promise(resolve => setTimeout(resolve, 500));
+                await new Promise(resolve => setTimeout(resolve, 300));
 
                 // Get user account
                 const userAccount = localStorage.getItem('currentUser');
@@ -182,7 +184,7 @@
                 }
 
                 updateProgress('Loading user profile...', 50);
-                await new Promise(resolve => setTimeout(resolve, 500));
+                await new Promise(resolve => setTimeout(resolve, 300));
 
                 // Get user data and determine role
                 let userData = await getUserInfo(userAccount);
@@ -210,12 +212,13 @@
                 };
 
                 updateProgress('Preparing dashboard...', 70);
+                await new Promise(resolve => setTimeout(resolve, 300));
 
                 // Update navbar with user info
                 updateNavbarUserInfo(userInfo, userAccount);
 
                 updateProgress('Redirecting to dashboard...', 90);
-                await new Promise(resolve => setTimeout(resolve, 500));
+                await new Promise(resolve => setTimeout(resolve, 300));
 
                 // Route to appropriate dashboard
                 const dashboardUrl = getDashboardUrl(finalRole);
@@ -234,11 +237,20 @@
 
                 setTimeout(() => {
                     window.location.href = dashboardUrl;
-                }, 300);
+                }, 500);
 
             } catch (error) {
                 console.error('Dashboard initialization error:', error);
-                showError(error.message || 'Failed to load dashboard. Please try again.');
+                // Don't show error modal if it's just a temporary loading issue
+                if (retryCount < MAX_RETRIES) {
+                    retryCount++;
+                    console.log(`Retrying dashboard load (${retryCount}/${MAX_RETRIES})...`);
+                    setTimeout(() => {
+                        initializeDashboard();
+                    }, 1000);
+                } else {
+                    showError(error.message || 'Failed to load dashboard. Please try again.');
+                }
             }
         }
 
@@ -318,8 +330,9 @@
             if (loadingState) loadingState.classList.remove('hidden');
             if (errorState) errorState.classList.add('hidden');
 
-            // Reset progress
+            // Reset progress and retry count
             updateProgress('Retrying...', 0);
+            retryCount = 0;
 
             // Retry after a short delay
             setTimeout(() => {

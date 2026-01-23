@@ -327,6 +327,33 @@ async function checkRegistrationStatus() {
         return;
     }
     
+    // Admin wallet check
+    const ADMIN_WALLETS = ['0x29bb7718d5c6da6e787deae8fd6bb3459e8539f2'];
+    if (ADMIN_WALLETS.includes(userAccount.toLowerCase())) {
+        console.log('Admin wallet detected:', userAccount);
+        const adminData = {
+            fullName: 'System Administrator',
+            email: 'admin@evid-dgc.com',
+            role: 8,
+            department: 'Administration',
+            jurisdiction: 'System',
+            badgeNumber: 'ADMIN-001',
+            isRegistered: true,
+            registrationDate: new Date().toISOString(),
+            walletAddress: userAccount,
+            accountType: 'admin'
+        };
+        
+        // Save admin data
+        localStorage.setItem('evidUser_' + userAccount, JSON.stringify(adminData));
+        localStorage.setItem('currentUser', userAccount);
+        
+        showAlert('Welcome Admin! Auto-login successful.', 'success');
+        displayAdminOptions(adminData);
+        toggleSections('adminOptions');
+        return;
+    }
+    
     const savedUser = localStorage.getItem('evidUser_' + userAccount);
     
     if (savedUser) {
