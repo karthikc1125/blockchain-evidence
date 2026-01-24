@@ -1,31 +1,4 @@
-/**
- * EVID-DGC - Blockchain Evidence Management System
- * Main application logic
- */
-
 let userAccount;
-
-const roleNames = {
-    1: 'Public Viewer',
-    2: 'Investigator',
-    3: 'Forensic Analyst',
-    4: 'Legal Professional',
-    5: 'Court Official',
-    6: 'Evidence Manager',
-    7: 'Auditor',
-    8: 'Administrator'
-};
-
-const roleMapping = {
-    1: 'public_viewer',
-    2: 'investigator',
-    3: 'forensic_analyst',
-    4: 'legal_professional',
-    5: 'court_official',
-    6: 'evidence_manager',
-    7: 'auditor',
-    8: 'admin'
-};
 
 // Initialize application
 function initializeApp() {
@@ -114,7 +87,7 @@ function closeEmailRegistration() {
 }
 
 // Email login handler
-function handleEmailLogin(event) {
+async function handleEmailLogin(event) {
     event.preventDefault();
     console.log('Handling email login...');
     
@@ -126,51 +99,50 @@ function handleEmailLogin(event) {
         return;
     }
     
-    // Admin login check
-    if (email.toLowerCase() === 'gc67766@gmail.com' && password === '@Gopichand1@') {
-        const adminData = {
-            email: 'gc67766@gmail.com',
-            fullName: 'System Administrator',
-            role: 8,
-            department: 'Administration',
-            isRegistered: true,
-            walletAddress: '0x29bb7718d5c6da6e787deae8fd6bb3459e8539f2',
-            loginType: 'email',
-            accountType: 'admin'
-        };
+    try {
+        showLoading(true, 'Logging in...');
         
-        localStorage.setItem('emailUser_' + email, JSON.stringify(adminData));
-        localStorage.setItem('currentUser', 'email_' + email);
+        const response = await fetch('/api/auth/email-login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email, password })
+        });
         
-        showAlert('Admin login successful!', 'success');
-        closeEmailLogin();
-        displayAdminOptions(adminData);
-        toggleSections('adminOptions');
-        return;
-    }
-    
-    // Check localStorage for email users
-    const emailUserKey = 'emailUser_' + email;
-    const userData = localStorage.getItem(emailUserKey);
-    
-    if (userData) {
-        const user = JSON.parse(userData);
-        if (user.password === password) {
-            localStorage.setItem('currentUser', 'email_' + email);
-            closeEmailLogin();
-            displayUserInfo(user);
-            toggleSections('alreadyRegistered');
+        const data = await response.json();
+        
+        if (data.success) {
+            // Store user data
+            localStorage.setItem('currentUser', JSON.stringify({
+                type: 'email',
+                user: data.user
+            }));
+            
             showAlert('Login successful!', 'success');
+            closeEmailLogin();
+            
+            // Check if admin
+            if (data.user.role === 'admin') {
+                displayAdminOptions(data.user);
+                toggleSections('adminOptions');
+            } else {
+                displayUserInfo(data.user);
+                toggleSections('alreadyRegistered');
+            }
         } else {
-            showAlert('Invalid password', 'error');
+            showAlert(data.error || 'Login failed', 'error');
         }
-    } else {
-        showAlert('User not found. Please register first.', 'error');
+    } catch (error) {
+        console.error('Login error:', error);
+        showAlert('Login failed. Please try again.', 'error');
+    } finally {
+        showLoading(false);
     }
 }
 
 // Handle email registration
-function handleEmailRegistration(event) {
+async function handleEmailRegistration(event) {
     event.preventDefault();
     console.log('Handling email registration...');
 
@@ -178,7 +150,9 @@ function handleEmailRegistration(event) {
     const password = document.getElementById('regPassword').value;
     const confirmPassword = document.getElementById('regConfirmPassword').value;
     const fullName = document.getElementById('regFullName').value;
-    const role = parseInt(document.getElementById('regRole').value);
+    const role = document.getElementById('regRole').value;
+
+    console.log('Registration data:', { email, fullName, role });
 
     if (password !== confirmPassword) {
         showAlert('Passwords do not match.', 'error');
@@ -190,33 +164,53 @@ function handleEmailRegistration(event) {
         return;
     }
 
-    const existingUser = localStorage.getItem('emailUser_' + email);
-    if (existingUser) {
-        showAlert('Account already exists.', 'error');
+    if (!fullName || !role) {
+        showAlert('Please fill in all required fields.', 'error');
         return;
     }
 
-    const userData = {
-        email,
-        password,
-        fullName,
-        role,
-        department: 'General',
-        jurisdiction: 'General',
-        isRegistered: true,
-        registrationDate: new Date().toISOString(),
-        loginType: 'email'
-    };
-
-    localStorage.setItem('emailUser_' + email, JSON.stringify(userData));
-    localStorage.setItem('currentUser', 'email_' + email);
-
-    showAlert('Registration successful!', 'success');
-    closeEmailRegistration();
-
-    setTimeout(() => {
-        window.location.href = 'dashboard.html';
-    }, 1500);
+    try {
+        showLoading(true, 'Creating account...');
+        
+        const response = await fetch('/api/auth/email-register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                email: email.toLowerCase().trim(),
+                password,
+                fullName: fullName.trim(),
+                role,
+                department: 'General',
+                jurisdiction: 'General'
+            })
+        });
+        
+        const data = await response.json();
+        console.log('Registration response:', data);
+        
+        if (data.success) {
+            localStorage.setItem('currentUser', JSON.stringify({
+                type: 'email',
+                user: data.user
+            }));
+            
+            showAlert('Registration successful! Redirecting to dashboard...', 'success');
+            closeEmailRegistration();
+            
+            setTimeout(() => {
+                window.location.href = getDashboardUrl(data.user.role);
+            }, 1500);
+        } else {
+            showAlert(data.error || 'Registration failed', 'error');
+        }
+    } catch (error) {
+        console.error('Registration error:', error);
+        showAlert('Registration failed. Please try again.', 'error');
+    } finally {
+        showLoading(false);
+    }
 }
 
 // Initialize email login functionality
@@ -243,19 +237,9 @@ async function connectWallet() {
     }
 
     try {
-        showLoading(true);
+        showLoading(true, 'Connecting to MetaMask...');
 
         if (!window.ethereum) {
-            if (config && config.DEMO_MODE) {
-                console.log('Demo mode: Using mock wallet');
-                userAccount = '0x1234567890123456789012345678901234567890';
-                await new Promise(resolve => setTimeout(resolve, 1500));
-                updateWalletUI();
-                await checkRegistrationStatus();
-                showLoading(false);
-                return;
-            }
-
             showLoading(false);
             showErrorModal(
                 'MetaMask Not Found',
@@ -266,6 +250,7 @@ async function connectWallet() {
             return;
         }
 
+        // Request account access
         const accounts = await window.ethereum.request({
             method: 'eth_requestAccounts'
         });
@@ -278,6 +263,29 @@ async function connectWallet() {
 
         userAccount = accounts[0];
         console.log('Wallet connected:', userAccount);
+        
+        // Check if we're on the correct network
+        const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+        if (chainId !== config.TARGET_CHAIN_ID) {
+            try {
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: config.TARGET_CHAIN_ID }],
+                });
+            } catch (switchError) {
+                if (switchError.code === 4902) {
+                    // Network not added to MetaMask
+                    showErrorModal(
+                        'Network Not Found',
+                        `Please add ${config.NETWORK_NAME} to your MetaMask wallet.`
+                    );
+                } else {
+                    console.error('Network switch error:', switchError);
+                }
+                showLoading(false);
+                return;
+            }
+        }
         
         localStorage.setItem('wasConnected', 'true');
         
@@ -327,82 +335,40 @@ async function checkRegistrationStatus() {
         return;
     }
     
-    // Admin wallet check
-    const ADMIN_WALLETS = ['0x29bb7718d5c6da6e787deae8fd6bb3459e8539f2'];
-    if (ADMIN_WALLETS.includes(userAccount.toLowerCase())) {
-        console.log('Admin wallet detected:', userAccount);
-        const adminData = {
-            fullName: 'System Administrator',
-            email: 'admin@evid-dgc.com',
-            role: 8,
-            department: 'Administration',
-            jurisdiction: 'System',
-            badgeNumber: 'ADMIN-001',
-            isRegistered: true,
-            registrationDate: new Date().toISOString(),
-            walletAddress: userAccount,
-            accountType: 'admin'
-        };
+    try {
+        showLoading(true, 'Checking registration...');
         
-        // Save admin data
-        localStorage.setItem('evidUser_' + userAccount, JSON.stringify(adminData));
-        localStorage.setItem('currentUser', userAccount);
+        const response = await fetch(`/api/user/${userAccount}`);
+        const data = await response.json();
         
-        showAlert('Welcome Admin! Auto-login successful.', 'success');
-        displayAdminOptions(adminData);
-        toggleSections('adminOptions');
-        return;
-    }
-    
-    const savedUser = localStorage.getItem('evidUser_' + userAccount);
-    
-    if (savedUser) {
-        const userData = JSON.parse(savedUser);
-        console.log('Found existing user:', userData);
-        displayUserInfo(userData);
-        
-        if (userData.role === 'admin' || userData.role === 8) {
-            displayAdminOptions(userData);
-            toggleSections('adminOptions');
+        if (data.user) {
+            console.log('Found existing user:', data.user);
+            
+            // Store user data
+            localStorage.setItem('currentUser', JSON.stringify({
+                type: 'wallet',
+                user: data.user
+            }));
+            
+            displayUserInfo(data.user);
+            
+            if (data.user.role === 'admin') {
+                displayAdminOptions(data.user);
+                toggleSections('adminOptions');
+            } else {
+                toggleSections('alreadyRegistered');
+            }
         } else {
-            toggleSections('alreadyRegistered');
+            console.log('No existing user found, showing registration');
+            toggleSections('registration');
         }
-    } else {
-        console.log('No existing user found, creating test users and showing registration');
-        createTestUsers();
+    } catch (error) {
+        console.error('Error checking registration:', error);
+        showAlert('Error checking registration status', 'error');
         toggleSections('registration');
+    } finally {
+        showLoading(false);
     }
-}
-
-function createTestUsers() {
-    const testUsers = [
-        { role: 'public_viewer', name: 'Test Public Viewer', wallet: '0xtest1000000000000000000000000000000000001' },
-        { role: 'investigator', name: 'Test Investigator', wallet: '0xtest1000000000000000000000000000000000002' },
-        { role: 'forensic_analyst', name: 'Test Forensic Analyst', wallet: '0xtest1000000000000000000000000000000000003' },
-        { role: 'legal_professional', name: 'Test Legal Professional', wallet: '0xtest1000000000000000000000000000000000004' },
-        { role: 'court_official', name: 'Test Court Official', wallet: '0xtest1000000000000000000000000000000000005' },
-        { role: 'evidence_manager', name: 'Test Evidence Manager', wallet: '0xtest1000000000000000000000000000000000006' },
-        { role: 'auditor', name: 'Test Auditor', wallet: '0xtest1000000000000000000000000000000000007' }
-    ];
-
-    testUsers.forEach(user => {
-        const existingUser = localStorage.getItem('evidUser_' + user.wallet);
-        if (!existingUser) {
-            const userData = {
-                fullName: user.name,
-                email: `${user.role}@test.com`,
-                role: user.role,
-                department: 'Test Department',
-                jurisdiction: 'Test',
-                badgeNumber: `TEST-${user.role.toUpperCase()}`,
-                isRegistered: true,
-                registrationDate: new Date().toISOString(),
-                walletAddress: user.wallet,
-                accountType: 'test'
-            };
-            localStorage.setItem('evidUser_' + user.wallet, JSON.stringify(userData));
-        }
-    });
 }
 
 function displayAdminOptions(userData) {
@@ -423,20 +389,13 @@ function displayUserInfo(userData) {
     const userRoleName = document.getElementById('userRoleName');
 
     if (userName) {
-        userName.textContent = userData.fullName || 'User';
+        userName.textContent = userData.full_name || userData.fullName || 'User';
     }
 
     if (userRoleName) {
-        let roleName;
-        if (typeof userData.role === 'number') {
-            roleName = roleNames[userData.role];
-        } else if (typeof userData.role === 'string') {
-            roleName = userData.role.split('_').map(word => 
-                word.charAt(0).toUpperCase() + word.slice(1)
-            ).join(' ');
-        } else {
-            roleName = 'User';
-        }
+        const roleName = userData.role.split('_').map(word => 
+            word.charAt(0).toUpperCase() + word.slice(1)
+        ).join(' ');
         userRoleName.textContent = roleName;
     }
 }
@@ -457,40 +416,63 @@ async function handleRegistration(event) {
     event.preventDefault();
 
     try {
-        const role = parseInt(document.getElementById('userRole')?.value);
+        const role = document.getElementById('userRole')?.value;
         const fullName = document.getElementById('fullName')?.value;
         const badgeNumber = document.getElementById('badgeNumber')?.value;
         const department = document.getElementById('department')?.value;
         const jurisdiction = document.getElementById('jurisdiction')?.value;
+
+        console.log('Wallet registration data:', { role, fullName, userAccount });
 
         if (!role || !fullName) {
             showAlert('Please select a role and enter your full name.', 'error');
             return;
         }
 
-        const userData = {
-            fullName,
-            role,
-            badgeNumber: badgeNumber || '',
-            department: department || 'General',
-            jurisdiction: jurisdiction || 'General',
-            isRegistered: true,
-            registrationDate: new Date().toISOString(),
-            walletAddress: userAccount
-        };
+        if (!userAccount) {
+            showAlert('Please connect your wallet first.', 'error');
+            return;
+        }
 
-        localStorage.setItem('evidUser_' + userAccount, JSON.stringify(userData));
-        localStorage.setItem('currentUser', userAccount);
-
-        showAlert('Registration successful! Redirecting to dashboard...', 'success');
-
-        setTimeout(() => {
-            window.location.href = 'dashboard.html';
-        }, 2000);
-
+        showLoading(true, 'Registering user...');
+        
+        const response = await fetch('/api/auth/wallet-register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                walletAddress: userAccount.toLowerCase(),
+                fullName: fullName.trim(),
+                role: role,
+                badgeNumber: badgeNumber || '',
+                department: department || 'General',
+                jurisdiction: jurisdiction || 'General'
+            })
+        });
+        
+        const data = await response.json();
+        console.log('Wallet registration response:', data);
+        
+        if (data.success) {
+            localStorage.setItem('currentUser', JSON.stringify({
+                type: 'wallet',
+                user: data.user
+            }));
+            
+            showAlert('Registration successful! Redirecting to dashboard...', 'success');
+            
+            setTimeout(() => {
+                window.location.href = getDashboardUrl(data.user.role);
+            }, 2000);
+        } else {
+            showAlert(data.error || 'Registration failed', 'error');
+        }
     } catch (error) {
         console.error('Registration failed:', error);
         showAlert('Registration failed. Please try again.', 'error');
+    } finally {
+        showLoading(false);
     }
 }
 
@@ -618,7 +600,7 @@ function initializeRoleSelection() {
             roleCards.forEach(c => c.classList.remove('selected'));
             card.classList.add('selected');
 
-            const roleValue = parseInt(card.getAttribute('data-role'));
+            const roleValue = card.getAttribute('data-role');
             if (userRoleInput) {
                 userRoleInput.value = roleValue;
             }
@@ -750,13 +732,23 @@ if (window.ethereum) {
     });
 }
 
+// Helper function to get dashboard URL based on role
+function getDashboardUrl(role) {
+    if (role === 'admin') {
+        return 'dashboard-admin.html';
+    }
+    return `dashboard-${role.replace('_', '-')}.html`;
+}
+
 // Global exports
 window.EVID_DGC = {
     connectWallet,
     disconnectWallet,
     logout,
     showAlert,
-    scrollToSection
+    scrollToSection,
+    handleEmailRegistration,
+    handleEmailLogin
 };
 
 // Global error handlers

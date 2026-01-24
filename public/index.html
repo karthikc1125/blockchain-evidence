@@ -7,10 +7,12 @@
     <title>Home | Blockchain Evidence</title>
     <meta name="description" content="Professional blockchain evidence management for law enforcement, forensic analysts, and legal professionals.">
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="password-security.css">
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     <link rel="icon" sizes="32x32" href="logo-32x32.png" type="image/png">
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <script src="config.js"></script>
+    <script src="password-strength.js"></script>
     <script src="app.js"></script>
 </head>
 
@@ -255,56 +257,56 @@
                     <div class="role-selection">
                         <h3>Select Your Role</h3>
                         <div class="role-grid">
-                            <div class="role-card" data-role="1">
+                            <div class="role-card" data-role="public_viewer">
                                 <div class="role-icon">
                                     <i data-lucide="eye"></i>
                                 </div>
                                 <div class="role-title">Public Viewer</div>
                                 <div class="role-description">View public case information</div>
                             </div>
-                            <div class="role-card" data-role="2">
+                            <div class="role-card" data-role="investigator">
                                 <div class="role-icon">
                                     <i data-lucide="search"></i>
                                 </div>
                                 <div class="role-title">Investigator</div>
                                 <div class="role-description">Handle case creation and evidence uploads</div>
                             </div>
-                            <div class="role-card" data-role="3">
+                            <div class="role-card" data-role="forensic_analyst">
                                 <div class="role-icon">
                                     <i data-lucide="microscope"></i>
                                 </div>
                                 <div class="role-title">Forensic Analyst</div>
                                 <div class="role-description">Perform technical analysis and reports</div>
                             </div>
-                            <div class="role-card" data-role="4">
+                            <div class="role-card" data-role="legal_professional">
                                 <div class="role-icon">
                                     <i data-lucide="scale"></i>
                                 </div>
                                 <div class="role-title">Legal Professional</div>
                                 <div class="role-description">Conduct legal reviews of cases</div>
                             </div>
-                            <div class="role-card" data-role="5">
+                            <div class="role-card" data-role="court_official">
                                 <div class="role-icon">
                                     <i data-lucide="gavel"></i>
                                 </div>
                                 <div class="role-title">Court Official</div>
                                 <div class="role-description">Manage judicial proceedings</div>
                             </div>
-                            <div class="role-card" data-role="6">
+                            <div class="role-card" data-role="evidence_manager">
                                 <div class="role-icon">
                                     <i data-lucide="archive"></i>
                                 </div>
                                 <div class="role-title">Evidence Manager</div>
                                 <div class="role-description">Maintain chain of custody</div>
                             </div>
-                            <div class="role-card" data-role="7">
+                            <div class="role-card" data-role="auditor">
                                 <div class="role-icon">
                                     <i data-lucide="clipboard-check"></i>
                                 </div>
                                 <div class="role-title">Auditor</div>
                                 <div class="role-description">Oversee system compliance</div>
                             </div>
-                            <div class="role-card" data-role="8">
+                            <div class="role-card" data-role="admin">
                                 <div class="role-icon">
                                     <i data-lucide="settings"></i>
                                 </div>
@@ -652,6 +654,12 @@
                         Password
                     </label>
                     <input type="password" id="regPassword" class="form-control" placeholder="Create a password" required>
+                    <div id="regPasswordStrength" class="password-strength">
+                        <div class="strength-meter">
+                            <div class="strength-fill"></div>
+                        </div>
+                        <span class="strength-text">Password strength</span>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label for="regConfirmPassword">
@@ -674,13 +682,13 @@
                     </label>
                     <select id="regRole" class="form-control" required>
                         <option value="">Select your role</option>
-                        <option value="1">Public Viewer</option>
-                        <option value="2">Investigator</option>
-                        <option value="3">Forensic Analyst</option>
-                        <option value="4">Legal Professional</option>
-                        <option value="5">Court Official</option>
-                        <option value="6">Evidence Manager</option>
-                        <option value="7">Auditor</option>
+                        <option value="public_viewer">Public Viewer</option>
+                        <option value="investigator">Investigator</option>
+                        <option value="forensic_analyst">Forensic Analyst</option>
+                        <option value="legal_professional">Legal Professional</option>
+                        <option value="court_official">Court Official</option>
+                        <option value="evidence_manager">Evidence Manager</option>
+                        <option value="auditor">Auditor</option>
                     </select>
                 </div>
                 <div class="form-actions">

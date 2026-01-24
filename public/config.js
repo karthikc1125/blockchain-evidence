@@ -3,12 +3,12 @@
  * Application configuration and constants
  */
 const config = {
-    // Demo mode for development
-    DEMO_MODE: true,
+    // Production mode - no demo behaviors
+    DEMO_MODE: false,
     
     // Blockchain configuration
-    TARGET_CHAIN_ID: '0x1', // Ethereum Mainnet
-    NETWORK_NAME: 'Ethereum Mainnet',
+    TARGET_CHAIN_ID: '0x89', // Polygon Mainnet
+    NETWORK_NAME: 'Polygon Mainnet',
     
     // File upload limits
     MAX_FILE_SIZE: 100 * 1024 * 1024, // 100MB
@@ -60,8 +60,8 @@ const config = {
     APP_VERSION: '1.0.0',
     
     // Development settings
-    DEBUG: true,
-    LOG_LEVEL: 'info'
+    DEBUG: false,
+    LOG_LEVEL: 'error'
 };
 
 // Export for use in other modules

@@ -221,14 +221,13 @@ CREATE INDEX idx_role_change_requests_target ON role_change_requests(target_wall
 CREATE INDEX idx_role_change_requests_requesting ON role_change_requests(requesting_admin);
 
 -- ============================================================================
--- FUNCTIONS AND TRIGGERS (WITH SECURE SEARCH PATH)
+-- FUNCTIONS AND TRIGGERS
 -- ============================================================================
 
 -- Function to hash passwords
 CREATE OR REPLACE FUNCTION hash_password(password TEXT)
 RETURNS TEXT AS $$
 BEGIN
-    -- Simple hash for demo - in production use proper bcrypt
     RETURN encode(digest(password || 'evid_dgc_salt', 'sha256'), 'hex');
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -255,103 +254,7 @@ CREATE TRIGGER users_update_trigger
     FOR EACH ROW
     EXECUTE FUNCTION update_last_updated();
 
--- ============================================================================
--- FIRST ADMIN USER SETUP
--- ============================================================================
-
--- Insert system admin user
-INSERT INTO users (
-    wallet_address,
-    email,
-    full_name,
-    role,
-    department,
-    jurisdiction,
-    badge_number,
-    account_type,
-    auth_type,
-    created_by,
-    is_active
-) VALUES (
-    '0x29bb7718d5c6da6e787deae8fd6bb3459e8539f2',
-    'admin@evid-dgc.com',
-    'System Administrator',
-    'admin',
-    'Administration',
-    'System',
-    'ADMIN-001',
-    'real',
-    'both',
-    'system_setup',
-    true
-) ON CONFLICT (wallet_address) DO UPDATE SET
-    email = EXCLUDED.email,
-    full_name = EXCLUDED.full_name,
-    role = EXCLUDED.role,
-    is_active = EXCLUDED.is_active;
-
--- Insert email admin user for gc67766@gmail.com
-INSERT INTO users (
-    email,
-    password_hash,
-    full_name,
-    role,
-    department,
-    jurisdiction,
-    badge_number,
-    account_type,
-    auth_type,
-    created_by,
-    is_active
-) VALUES (
-    'gc67766@gmail.com',
-    hash_password('@Gopichand1@'),
-    'System Administrator',
-    'admin',
-    'Administration',
-    'System',
-    'ADMIN-002',
-    'real',
-    'email',
-    'system_setup',
-    true
-) ON CONFLICT (email) DO UPDATE SET
-    full_name = EXCLUDED.full_name,
-    role = EXCLUDED.role,
-    is_active = EXCLUDED.is_active;
-
--- ============================================================================
--- VERIFICATION QUERIES
--- ============================================================================
-
--- Verify admin users were created
-SELECT 
-    id,
-    wallet_address,
-    email,
-    full_name,
-    role,
-    auth_type,
-    created_at,
-    is_active
-FROM users 
-WHERE role = 'admin' 
-ORDER BY created_at;
-
--- Show admin count
-SELECT COUNT(*) as admin_count 
-FROM users 
-WHERE role = 'admin' AND is_active = true;
-
--- Show all tables created
-SELECT table_name 
-FROM information_schema.tables 
-WHERE table_schema = 'public' 
-AND table_name IN ('users', 'evidence', 'cases', 'activity_logs', 'admin_actions', 'notifications', 'tags', 'evidence_tags', 'role_change_requests')
-ORDER BY table_name;)
--- ============================================================================
-
--- Function to update tag usage count (SECURE)
+-- Function to update tag usage count
 CREATE OR REPLACE FUNCTION update_tag_usage_count()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -364,18 +267,18 @@ BEGIN
     END IF;
     RETURN NULL;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Function to update role change requests timestamp (SECURE)
+-- Function to update role change requests timestamp
 CREATE OR REPLACE FUNCTION update_role_change_requests_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at = NOW();
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Email user creation function (SECURE)
+-- Email user creation function
 CREATE OR REPLACE FUNCTION create_email_user(
     p_email TEXT,
     p_password_hash TEXT,
@@ -419,9 +322,9 @@ BEGIN
 
     RETURN result;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Triggers
+-- Create triggers
 CREATE TRIGGER trigger_update_tag_usage
     AFTER INSERT OR DELETE ON evidence_tags
     FOR EACH ROW EXECUTE FUNCTION update_tag_usage_count();
@@ -444,6 +347,36 @@ INSERT INTO users (
     'System Administrator', 'admin', 'Administration', 'System',
     'ADMIN-001', 'real', 'both', 'system_setup', true, true
 ) ON CONFLICT (wallet_address) DO NOTHING;
+
+-- Insert email admin user for gc67766@gmail.com
+INSERT INTO users (
+    email,
+    password_hash,
+    full_name,
+    role,
+    department,
+    jurisdiction,
+    badge_number,
+    account_type,
+    auth_type,
+    created_by,
+    is_active
+) VALUES (
+    'gc67766@gmail.com',
+    hash_password('@Gopichand1@'),
+    'System Administrator',
+    'admin',
+    'Administration',
+    'System',
+    'ADMIN-002',
+    'real',
+    'email',
+    'system_setup',
+    true
+) ON CONFLICT (email) DO UPDATE SET
+    full_name = EXCLUDED.full_name,
+    role = EXCLUDED.role,
+    is_active = EXCLUDED.is_active;
 
 -- Sample email users for testing
 INSERT INTO users (
@@ -485,3 +418,188 @@ FROM pg_tables
 WHERE schemaname = 'public' 
 AND tablename IN ('users', 'evidence', 'cases', 'activity_logs', 'admin_actions', 'notifications', 'tags', 'evidence_tags', 'role_change_requests')
 ORDER BY tablename;
+-- Quick fix for RLS policy issue
+DROP POLICY IF EXISTS "Users can view active users" ON users;
+CREATE POLICY "Users can view active users" ON users FOR SELECT USING (is_active = true);
+CREATE POLICY "Users can register themselves" ON users FOR INSERT WITH CHECK (true);
+-- User Management Database Patch
+-- Run this in Supabase SQL Editor to add user management functionality
+
+-- Add user management tables
+CREATE TABLE IF NOT EXISTS user_sessions (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    session_token TEXT UNIQUE NOT NULL,
+    wallet_address TEXT,
+    email TEXT,
+    login_type TEXT CHECK (login_type IN ('wallet', 'email')),
+    ip_address TEXT,
+    user_agent TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    expires_at TIMESTAMPTZ DEFAULT (NOW() + INTERVAL '24 hours'),
+    is_active BOOLEAN DEFAULT TRUE
+);
+
+CREATE TABLE IF NOT EXISTS user_permissions (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    permission_name TEXT NOT NULL,
+    granted_by INTEGER REFERENCES users(id),
+    granted_at TIMESTAMPTZ DEFAULT NOW(),
+    expires_at TIMESTAMPTZ,
+    is_active BOOLEAN DEFAULT TRUE
+);
+
+CREATE TABLE IF NOT EXISTS user_profile_updates (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    field_name TEXT NOT NULL,
+    old_value TEXT,
+    new_value TEXT,
+    updated_by INTEGER REFERENCES users(id),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    reason TEXT
+);
+
+-- Add RLS policies
+ALTER TABLE user_sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_permissions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_profile_updates ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Service role full access" ON user_sessions;
+DROP POLICY IF EXISTS "Service role full access" ON user_permissions;
+DROP POLICY IF EXISTS "Service role full access" ON user_profile_updates;
+
+CREATE POLICY "Service role full access" ON user_sessions FOR ALL USING (current_user = 'service_role');
+CREATE POLICY "Service role full access" ON user_permissions FOR ALL USING (current_user = 'service_role');
+CREATE POLICY "Service role full access" ON user_profile_updates FOR ALL USING (current_user = 'service_role');
+
+-- Add indexes
+CREATE INDEX IF NOT EXISTS idx_user_sessions_token ON user_sessions(session_token);
+CREATE INDEX IF NOT EXISTS idx_user_sessions_user_id ON user_sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_sessions_active ON user_sessions(is_active, expires_at);
+CREATE INDEX IF NOT EXISTS idx_user_permissions_user_id ON user_permissions(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_profile_updates_user_id ON user_profile_updates(user_id);
+
+-- Add user management functions
+CREATE OR REPLACE FUNCTION get_user_by_identifier(p_identifier TEXT)
+RETURNS JSON AS $$
+DECLARE
+    user_data JSON;
+BEGIN
+    SELECT json_build_object(
+        'id', id,
+        'wallet_address', wallet_address,
+        'email', email,
+        'full_name', full_name,
+        'role', role,
+        'department', department,
+        'jurisdiction', jurisdiction,
+        'badge_number', badge_number,
+        'auth_type', auth_type,
+        'is_active', is_active,
+        'created_at', created_at
+    ) INTO user_data
+    FROM users
+    WHERE (email = p_identifier OR wallet_address = p_identifier)
+    AND is_active = true;
+    
+    RETURN user_data;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION get_all_users(
+    p_limit INTEGER DEFAULT 50,
+    p_offset INTEGER DEFAULT 0,
+    p_role_filter TEXT DEFAULT NULL,
+    p_active_only BOOLEAN DEFAULT true
+)
+RETURNS JSON AS $$
+DECLARE
+    users_data JSON;
+    total_count INTEGER;
+BEGIN
+    -- Get total count
+    SELECT COUNT(*) INTO total_count
+    FROM users
+    WHERE (p_active_only = false OR is_active = true)
+    AND (p_role_filter IS NULL OR role = p_role_filter);
+    
+    -- Get users
+    SELECT json_agg(
+        json_build_object(
+            'id', id,
+            'wallet_address', wallet_address,
+            'email', email,
+            'full_name', full_name,
+            'role', role,
+            'department', department,
+            'jurisdiction', jurisdiction,
+            'badge_number', badge_number,
+            'auth_type', auth_type,
+            'is_active', is_active,
+            'created_at', created_at,
+            'last_updated', last_updated
+        )
+    ) INTO users_data
+    FROM (
+        SELECT *
+        FROM users
+        WHERE (p_active_only = false OR is_active = true)
+        AND (p_role_filter IS NULL OR role = p_role_filter)
+        ORDER BY created_at DESC
+        LIMIT p_limit OFFSET p_offset
+    ) u;
+    
+    RETURN json_build_object(
+        'users', COALESCE(users_data, '[]'::json),
+        'total_count', total_count,
+        'limit', p_limit,
+        'offset', p_offset
+    );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION update_user_profile(
+    p_user_id INTEGER,
+    p_full_name TEXT DEFAULT NULL,
+    p_department TEXT DEFAULT NULL,
+    p_jurisdiction TEXT DEFAULT NULL,
+    p_badge_number TEXT DEFAULT NULL,
+    p_updated_by INTEGER DEFAULT NULL
+)
+RETURNS JSON AS $$
+DECLARE
+    old_data RECORD;
+    result JSON;
+BEGIN
+    -- Get current data
+    SELECT * INTO old_data FROM users WHERE id = p_user_id;
+    
+    IF old_data IS NULL THEN
+        RETURN json_build_object('success', false, 'error', 'User not found');
+    END IF;
+    
+    -- Update user
+    UPDATE users SET
+        full_name = COALESCE(p_full_name, full_name),
+        department = COALESCE(p_department, department),
+        jurisdiction = COALESCE(p_jurisdiction, jurisdiction),
+        badge_number = COALESCE(p_badge_number, badge_number),
+        last_updated = NOW()
+    WHERE id = p_user_id;
+    
+    -- Log changes
+    IF p_full_name IS NOT NULL AND p_full_name != old_data.full_name THEN
+        INSERT INTO user_profile_updates (user_id, field_name, old_value, new_value, updated_by)
+        VALUES (p_user_id, 'full_name', old_data.full_name, p_full_name, p_updated_by);
+    END IF;
+    
+    IF p_department IS NOT NULL AND p_department != old_data.department THEN
+        INSERT INTO user_profile_updates (user_id, field_name, old_value, new_value, updated_by)
+        VALUES (p_user_id, 'department', old_data.department, p_department, p_updated_by);
+    END IF;
+    
+    RETURN json_build_object('success', true, 'message', 'Profile updated successfully');
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;

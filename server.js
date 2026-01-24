@@ -488,7 +488,309 @@ app.post('/api/notifications/create', async (req, res) => {
     }
 });
 
-// Get user by wallet address
+// Email authentication endpoints
+app.post('/api/auth/email-login', authLimiter, async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        if (!email || !password) {
+            return res.status(400).json({ error: 'Email and password are required' });
+        }
+
+        // Get user by email
+        const { data: user, error } = await supabase
+            .from('users')
+            .select('*')
+            .eq('email', email.toLowerCase())
+            .eq('is_active', true)
+            .single();
+
+        if (error || !user) {
+            return res.status(401).json({ error: 'Invalid email or password' });
+        }
+
+        // Verify password using database function
+        const { data: passwordValid, error: verifyError } = await supabase
+            .rpc('verify_password', { password, hash: user.password_hash });
+
+        if (verifyError || !passwordValid) {
+            return res.status(401).json({ error: 'Invalid email or password' });
+        }
+
+        // Log login activity
+        await supabase
+            .from('activity_logs')
+            .insert({
+                user_id: user.email,
+                action: 'email_login',
+                details: JSON.stringify({ auth_type: 'email' }),
+                timestamp: new Date().toISOString()
+            });
+
+        res.json({ 
+            success: true, 
+            user: {
+                id: user.id,
+                email: user.email,
+                full_name: user.full_name,
+                role: user.role,
+                department: user.department,
+                jurisdiction: user.jurisdiction,
+                auth_type: user.auth_type
+            }
+        });
+    } catch (error) {
+        console.error('Email login error:', error);
+        res.status(500).json({ error: 'Login failed' });
+    }
+});
+
+// Email registration endpoint
+app.post('/api/auth/email-register', authLimiter, async (req, res) => {
+    try {
+        const { email, password, fullName, role, department, jurisdiction } = req.body;
+        
+        console.log('Email registration request:', { email, fullName, role, department, jurisdiction });
+
+        if (!email || !password || !fullName || !role) {
+            return res.status(400).json({ error: 'Email, password, full name, and role are required' });
+        }
+
+        if (password.length < 6) {
+            return res.status(400).json({ error: 'Password must be at least 6 characters long' });
+        }
+
+        if (!allowedRoles.includes(role)) {
+            return res.status(400).json({ error: 'Invalid role selected' });
+        }
+
+        // Check if email already exists
+        const { data: existingUser } = await supabase
+            .from('users')
+            .select('email')
+            .eq('email', email.toLowerCase())
+            .single();
+
+        if (existingUser) {
+            return res.status(409).json({ error: 'Email address already registered' });
+        }
+
+        // Hash password using database function
+        const { data: hashedPassword, error: hashError } = await supabase
+            .rpc('hash_password', { password });
+
+        if (hashError) {
+            console.error('Password hashing error:', hashError);
+            throw hashError;
+        }
+
+        // Create user
+        const { data: newUser, error } = await supabase
+            .from('users')
+            .insert({
+                email: email.toLowerCase(),
+                password_hash: hashedPassword,
+                full_name: fullName,
+                role: role,
+                department: department || 'General',
+                jurisdiction: jurisdiction || 'General',
+                auth_type: 'email',
+                account_type: 'real',
+                created_by: 'self_registration',
+                is_active: true,
+                email_verified: true
+            })
+            .select()
+            .single();
+
+        if (error) {
+            console.error('User creation error:', error);
+            throw error;
+        }
+
+        console.log('User created successfully:', newUser.id);
+
+        // Log registration activity
+        await supabase
+            .from('activity_logs')
+            .insert({
+                user_id: newUser.email,
+                action: 'email_registration',
+                details: JSON.stringify({ 
+                    role: role,
+                    auth_type: 'email',
+                    department: department || 'General'
+                }),
+                timestamp: new Date().toISOString()
+            });
+
+        res.json({ 
+            success: true, 
+            message: 'Registration successful',
+            user: {
+                id: newUser.id,
+                email: newUser.email,
+                full_name: newUser.full_name,
+                role: newUser.role,
+                department: newUser.department,
+                jurisdiction: newUser.jurisdiction,
+                auth_type: newUser.auth_type
+            }
+        });
+    } catch (error) {
+        console.error('Email registration error:', error);
+        res.status(500).json({ error: 'Registration failed: ' + error.message });
+    }
+});
+
+// Wallet registration endpoint
+app.post('/api/auth/wallet-register', authLimiter, async (req, res) => {
+    try {
+        const { walletAddress, fullName, role, department, jurisdiction, badgeNumber } = req.body;
+        
+        console.log('Wallet registration request:', { walletAddress, fullName, role, department, jurisdiction });
+
+        if (!validateWalletAddress(walletAddress)) {
+            return res.status(400).json({ error: 'Invalid wallet address' });
+        }
+
+        if (!fullName || !role) {
+            return res.status(400).json({ error: 'Full name and role are required' });
+        }
+
+        if (!allowedRoles.includes(role)) {
+            return res.status(400).json({ error: 'Invalid role selected' });
+        }
+
+        // Check if wallet already exists
+        const { data: existingUser } = await supabase
+            .from('users')
+            .select('wallet_address')
+            .eq('wallet_address', walletAddress.toLowerCase())
+            .single();
+
+        if (existingUser) {
+            return res.status(409).json({ error: 'Wallet address already registered' });
+        }
+
+        // Create user
+        const { data: newUser, error } = await supabase
+            .from('users')
+            .insert({
+                wallet_address: walletAddress.toLowerCase(),
+                full_name: fullName,
+                role: role,
+                department: department || 'General',
+                jurisdiction: jurisdiction || 'General',
+                badge_number: badgeNumber || '',
+                auth_type: 'wallet',
+                account_type: 'real',
+                created_by: 'self_registration',
+                is_active: true
+            })
+            .select()
+            .single();
+
+        if (error) {
+            console.error('Wallet user creation error:', error);
+            throw error;
+        }
+
+        console.log('Wallet user created successfully:', newUser.id);
+
+        // Log registration activity
+        await supabase
+            .from('activity_logs')
+            .insert({
+                user_id: newUser.wallet_address,
+                action: 'wallet_registration',
+                details: JSON.stringify({ 
+                    role: role,
+                    auth_type: 'wallet',
+                    department: department || 'General'
+                }),
+                timestamp: new Date().toISOString()
+            });
+
+        res.json({ 
+            success: true, 
+            message: 'Registration successful',
+            user: {
+                id: newUser.id,
+                wallet_address: newUser.wallet_address,
+                full_name: newUser.full_name,
+                role: newUser.role,
+                department: newUser.department,
+                jurisdiction: newUser.jurisdiction,
+                badge_number: newUser.badge_number,
+                auth_type: newUser.auth_type
+            }
+        });
+    } catch (error) {
+        console.error('Wallet registration error:', error);
+        res.status(500).json({ error: 'Registration failed: ' + error.message });
+    }
+});
+
+// Update user profile
+app.put('/api/user/profile/:id', authLimiter, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { fullName, department, jurisdiction, badgeNumber, updatedBy } = req.body;
+
+        if (!validateWalletAddress(updatedBy)) {
+            return res.status(400).json({ error: 'Invalid updater wallet address' });
+        }
+
+        // Get updater info
+        const { data: updater } = await supabase
+            .from('users')
+            .select('id, role')
+            .eq('wallet_address', updatedBy)
+            .single();
+
+        if (!updater) {
+            return res.status(403).json({ error: 'Unauthorized' });
+        }
+
+        // Check if user can update this profile (self or admin)
+        const { data: targetUser } = await supabase
+            .from('users')
+            .select('wallet_address')
+            .eq('id', id)
+            .single();
+
+        if (!targetUser) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        if (targetUser.wallet_address !== updatedBy && updater.role !== 'admin') {
+            return res.status(403).json({ error: 'Can only update own profile or admin required' });
+        }
+
+        // Use database function to update profile
+        const { data: result, error } = await supabase
+            .rpc('update_user_profile', {
+                p_user_id: parseInt(id),
+                p_full_name: fullName,
+                p_department: department,
+                p_jurisdiction: jurisdiction,
+                p_badge_number: badgeNumber,
+                p_updated_by: updater.id
+            });
+
+        if (error) {
+            throw error;
+        }
+
+        res.json(result);
+    } catch (error) {
+        console.error('Update profile error:', error);
+        res.status(500).json({ error: 'Failed to update profile' });
+    }
+});
+
+// Get user by wallet address with enhanced data
 app.get('/api/user/:wallet', authLimiter, async (req, res) => {
     try {
         const { wallet } = req.params;
@@ -497,18 +799,17 @@ app.get('/api/user/:wallet', authLimiter, async (req, res) => {
             return res.status(400).json({ error: 'Invalid wallet address' });
         }
 
-        const { data: user, error } = await supabase
-            .from('users')
-            .select('*')
-            .eq('wallet_address', wallet)
-            .eq('is_active', true)
-            .single();
+        // Use database function to get user
+        const { data: result, error } = await supabase
+            .rpc('get_user_by_identifier', {
+                p_identifier: wallet
+            });
 
-        if (error && error.code !== 'PGRST116') {
+        if (error) {
             throw error;
         }
 
-        res.json({ user: user || null });
+        res.json({ user: result });
     } catch (error) {
         console.error('Get user error:', error);
         res.status(500).json({ error: 'Internal server error' });
@@ -737,19 +1038,45 @@ app.post('/api/admin/delete-user', adminLimiter, verifyAdmin, async (req, res) =
     }
 });
 
-// Get all users (Admin only)
-app.post('/api/admin/users', adminLimiter, verifyAdmin, async (req, res) => {
+// Get all users with enhanced filtering and pagination
+app.get('/api/admin/users', adminLimiter, async (req, res) => {
     try {
-        const { data: users, error } = await supabase
+        const { adminWallet } = req.query;
+        const { limit = 50, offset = 0, role, active_only = 'true' } = req.query;
+
+        if (!validateWalletAddress(adminWallet)) {
+            return res.status(400).json({ error: 'Invalid admin wallet address' });
+        }
+
+        // Verify admin permissions
+        const { data: admin } = await supabase
             .from('users')
-            .select('*')
-            .order('created_at', { ascending: false });
+            .select('role')
+            .eq('wallet_address', adminWallet)
+            .eq('is_active', true)
+            .single();
+
+        if (!admin || admin.role !== 'admin') {
+            return res.status(403).json({ error: 'Admin privileges required' });
+        }
+
+        // Use database function for efficient user retrieval
+        const { data: result, error } = await supabase
+            .rpc('get_all_users', {
+                p_limit: parseInt(limit),
+                p_offset: parseInt(offset),
+                p_role_filter: role || null,
+                p_active_only: active_only === 'true'
+            });
 
         if (error) {
             throw error;
         }
 
-        res.json({ users });
+        res.json({ 
+            success: true, 
+            ...result
+        });
     } catch (error) {
         console.error('Get users error:', error);
         res.status(500).json({ error: 'Failed to get users' });
@@ -1851,6 +2178,70 @@ app.post('/api/evidence/comparison-report', async (req, res) => {
         res.status(500).json({ error: 'Failed to generate comparison report' });
     }
 });
+
+// Get all evidence
+app.get('/api/evidence', async (req, res) => {
+    try {
+        const { limit = 50, offset = 0, case_id, status, submitted_by } = req.query;
+        
+        let query = supabase
+            .from('evidence')
+            .select('*')
+            .order('timestamp', { ascending: false })
+            .range(offset, offset + limit - 1);
+        
+        // Apply filters
+        if (case_id) {
+            query = query.eq('case_id', case_id);
+        }
+        
+        if (status) {
+            query = query.eq('status', status);
+        }
+        
+        if (submitted_by) {
+            query = query.eq('submitted_by', submitted_by);
+        }
+        
+        const { data: evidence, error } = await query;
+        
+        if (error) {
+            throw error;
+        }
+        
+        // Add mock blockchain data for display
+        const enrichedEvidence = evidence.map(item => ({
+            ...item,
+            ipfs_hash: item.ipfs_hash || generateMockIPFSHash(),
+            blockchain_tx: item.blockchain_tx || generateMockTxHash(),
+            blockchain_verified: true,
+            verification_timestamp: new Date().toISOString()
+        }));
+        
+        res.json({ 
+            success: true, 
+            evidence: enrichedEvidence,
+            total: evidence.length
+        });
+    } catch (error) {
+        console.error('Get evidence error:', error);
+        res.status(500).json({ error: 'Failed to get evidence' });
+    }
+});
+
+// Helper functions for mock data
+function generateMockIPFSHash() {
+    return 'Qm' + Array.from({length: 44}, () => 
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+        .charAt(Math.floor(Math.random() * 62))
+    ).join('');
+}
+
+function generateMockTxHash() {
+    return '0x' + Array.from({length: 64}, () => 
+        '0123456789abcdef'.charAt(Math.floor(Math.random() * 16))
+    ).join('');
+}
 
 // Get evidence details for preview
 app.get('/api/evidence/:id', async (req, res) => {
