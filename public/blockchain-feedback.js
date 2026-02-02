@@ -153,24 +153,58 @@ class BlockchainFeedback {
 
     showTransactionSuccess(txHash, message = 'Evidence added successfully!') {
         this.removePendingTransaction(txHash);
+        const sanitizedMessage = this.sanitizeText(message);
+        const sanitizedTxHash = this.sanitizeText(txHash);
         this.showToast('success', `
             <div>
-                <div>${message}</div>
-                <small><a href="https://etherscan.io/tx/${txHash}" target="_blank" style="color: rgba(255,255,255,0.8);">View Transaction</a></small>
+                <div>${sanitizedMessage}</div>
+                <small><a href="https://etherscan.io/tx/${sanitizedTxHash}" target="_blank" style="color: rgba(255,255,255,0.8);">View Transaction</a></small>
             </div>
         `);
     }
 
     showTransactionError(txHash, error, retryCallback = null) {
         this.removePendingTransaction(txHash);
-        const retryButton = retryCallback ? `<button onclick="(${retryCallback.toString()})()" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 4px 8px; border-radius: 4px; cursor: pointer; margin-left: 10px;">Retry</button>` : '';
+        const sanitizedError = this.sanitizeText(error);
+        const retryButton = retryCallback ? 
+            `<button onclick="blockchainFeedback.executeRetry('${this.sanitizeText(txHash)}')" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 4px 8px; border-radius: 4px; cursor: pointer; margin-left: 10px;">Retry</button>` : '';
+        
         this.showToast('error', `
             <div>
                 <div>Transaction Failed</div>
-                <small>${error}</small>
+                <small>${sanitizedError}</small>
             </div>
             ${retryButton}
         `);
+        
+        if (retryCallback) {
+            this.retryCallbacks = this.retryCallbacks || new Map();
+            this.retryCallbacks.set(txHash, retryCallback);
+        }
+    }
+
+    executeRetry(txHash) {
+        const callback = this.retryCallbacks && this.retryCallbacks.get(txHash);
+        if (callback && typeof callback === 'function') {
+            callback();
+            this.retryCallbacks.delete(txHash);
+        }
+    }
+
+    sanitizeText(text) {
+        if (typeof text !== 'string') {
+            text = String(text);
+        }
+        return text.replace(/[<>"'&]/g, function(match) {
+            const escapeMap = {
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#x27;',
+                '&': '&amp;'
+            };
+            return escapeMap[match];
+        });
     }
 
     showToast(type, content, duration = 5000) {
