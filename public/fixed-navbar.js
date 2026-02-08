@@ -364,7 +364,7 @@ class FixedNavbarManager {
             ],
             'public_viewer': [
                 { label: 'Dashboard', icon: 'home', href: 'dashboard-public.html' },
-                { label: 'Cases', icon: 'folder', href: 'cases-public.html' },
+                { label: 'Cases', icon: 'folder', href: 'cases.html' },
                 { label: 'Search', icon: 'search', href: 'search-public.html' }
             ]
         };
